@@ -44,3 +44,9 @@ export const reservationService = {
 export const dashboardService = {
   getStats: () => request("get_dashboard_stats.php"),
 };
+
+export const userService = {
+  getAll: () => request("get_users.php"),
+  delete: (id) => request("delete_user.php", "POST", { id }),
+  create: (data) => request("create_user.php", "POST", data), // 👈 NOVA LINHA
+};

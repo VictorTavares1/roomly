@@ -1,9 +1,19 @@
-import { Home, Calendar, PlusCircle, MapPin, LogOut } from "lucide-react";
+import { Home, Calendar, PlusCircle, MapPin, LogOut, Users } from "lucide-react"; // 👈 Adicionei 'Users'
 import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react"; // 👈 Importei hooks novos
 
 export default function Sidebar() {
     const navigate = useNavigate();
     const location = useLocation();
+    const [userRole, setUserRole] = useState("professor"); // 👈 Estado para guardar o cargo
+
+    // 👇 1. Ver quem é o utilizador ao carregar
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user && user.role) {
+            setUserRole(user.role);
+        }
+    }, []);
 
     const isActive = (path) => {
         return location.pathname === path
@@ -51,6 +61,21 @@ export default function Sidebar() {
                     <PlusCircle size={20} />
                     <span className="font-medium">Nova Reserva</span>
                 </button>
+
+                {/* 👇 AQUI ESTÁ A NOVIDADE: SÓ PARA ADMIN 👇 */}
+                {userRole === 'admin' && (
+                    <>
+                        <div className="border-t border-blue-800 my-2 mx-2"></div>
+                        <p className="px-4 text-xs font-bold text-blue-300 uppercase mb-1">Admin</p>
+
+                        <button
+                            onClick={() => navigate('/manage-users')}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${isActive('/manage-users')}`}>
+                            <Users size={20} />
+                            <span className="font-medium">Utilizadores</span>
+                        </button>
+                    </>
+                )}
 
             </nav>
 
