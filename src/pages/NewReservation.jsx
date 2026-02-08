@@ -1,169 +1,136 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, MapPin, AlignLeft } from "lucide-react";
-import Sidebar from "../components/Sidebar";
+import { Calendar, Clock, MapPin, AlignLeft, CheckCircle } from "lucide-react";
+import Sidebar from "../components/Sidebar"; // Usar Sidebar diretamente para ter flexibilidade
+import Input from "../components/Input";
+import Button from "../components/Button";
+import Scheduler from "../components/Scheduler"; // <--- O NOSSO CALENDÁRIO NOVO
+import { roomService, reservationService } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function NewReservation() {
+    const { user } = useAuth();
     const navigate = useNavigate();
 
-    // Estados para guardar o que o utilizador escreve
-    const [rooms, setRooms] = useState([]); // Lista de salas para o dropdown
-    const [formData, setFormData] = useState({
-        room_id: "",
-        date: "",
-        start_time: "",
-        end_time: "",
-        purpose: ""
-    });
+    // Dados do Formulário
+    const [rooms, setRooms] = useState([]);
+    const [roomId, setRoomId] = useState("");
+    const [date, setDate] = useState("");
+    const [startTime, setStartTime] = useState("");
+    const [endTime, setEndTime] = useState("");
+    const [purpose, setPurpose] = useState("");
 
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    // Carregar as Salas ao iniciar
     useEffect(() => {
-        fetch("http://localhost/roomly_api/get_rooms.php")
-            .then((res) => res.json())
-            .then((data) => setRooms(data))
-            .catch((err) => console.error("Erro ao buscar salas:", err));
+        async function fetchRooms() {
+            try {
+                const data = await roomService.getAll();
+                setRooms(data);
+                if (data.length > 0) setRoomId(data[0].id); // Seleciona a primeira por defeito
+            } catch (err) {
+                console.error("Erro ao carregar salas", err);
+            }
+        }
+        fetchRooms();
     }, []);
-
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
+        setLoading(true);
 
-        // Ir buscar o ID do utilizador logado 
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user) {
-            alert("Erro: Não estás logado!");
+        // Validar lógica simples
+        if (startTime >= endTime) {
+            setError("A hora de fim tem de ser depois do início.");
+            setLoading(false);
             return;
         }
 
-        // 2. Preparar o pacote de dados para enviar
-        const dadosParaEnviar = {
-            ...formData,       // Junta os dados do formulário (sala, data, horas...)
-            user_id: user.id   // Adiciona o ID de quem está a reservar
-        };
-
         try {
-            // 3. Enviar para o PHP
-            const resposta = await fetch("http://localhost/roomly_api/create_reservation.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dadosParaEnviar)
+            // Montar as datas completas (Data + Hora)
+            const startFull = `${date} ${startTime}:00`;
+            const endFull = `${date} ${endTime}:00`;
+
+            // ATENÇÃO: Usei 'rooms_id' porque foi o que vi no teu print da base de dados!
+            await reservationService.create({
+                user_id: user.id,
+                rooms_id: roomId, // <--- CONFIRMADO PELO PRINT DA DB
+                start_time: startFull,
+                end_time: endFull,
+                purpose
             });
 
-            const resultado = await resposta.json();
-
-            if (resultado.status === "sucesso") {
-                alert("Reserva Confirmada com Sucesso! ✅");
-                navigate('/dashboard'); // Manda de volta para casa
-            } else {
-                alert("Ocorreu um erro: " + resultado.mensagem);
-            }
-
-        } catch (erro) {
-            console.error("Erro na requisição:", erro);
-            alert("Erro de ligação ao servidor.");
+            alert("Reserva criada com sucesso! 🎉");
+            navigate("/my-reservations");
+        } catch (err) {
+            console.error(err);
+            setError("Erro ao criar reserva. Verifica se a sala já não está ocupada nesse horário.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="flex bg-gray-50 min-h-screen">
             <Sidebar />
+            <div className="ml-64 flex-1 p-8">
+                <h1 className="text-3xl font-bold text-gray-800 mb-8">Nova Reserva 📅</h1>
 
-            <main className="flex-1 p-8 ml-64 flex justify-center items-center">
-                <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-100">
+                <div className="flex flex-col xl:flex-row gap-8">
 
-                    <div className="mb-8 border-b border-gray-100 pb-4">
-                        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                            <Calendar className="text-blue-600" /> Nova Reserva
-                        </h1>
-                        <p className="text-gray-500 mt-2">Preenche os dados para garantires a tua sala.</p>
+                    {/* COLUNA DA ESQUERDA: O Formulário */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 w-full xl:w-1/3 h-fit">
+                        <h2 className="text-xl font-bold text-gray-700 mb-6">Detalhes</h2>
+
+                        {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Escolher Sala</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
+                                    <select
+                                        value={roomId}
+                                        onChange={(e) => setRoomId(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                                    >
+                                        {rooms.map(room => (
+                                            <option key={room.id} value={room.id}>
+                                                {room.name} (Cap: {room.capacity})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <Input label="Data" type="date" value={date} onChange={setDate} icon={Calendar} required />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <Input label="Início" type="time" value={startTime} onChange={setStartTime} icon={Clock} required />
+                                <Input label="Fim" type="time" value={endTime} onChange={setEndTime} icon={Clock} required />
+                            </div>
+
+                            <Input label="Motivo" type="text" placeholder="Ex: Aula de Apoio" value={purpose} onChange={setPurpose} icon={AlignLeft} required />
+
+                            <Button type="submit" variant="primary" className="w-full mt-4 py-3" isLoading={loading}>
+                                <CheckCircle size={20} /> Confirmar Reserva
+                            </Button>
+                        </form>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                <MapPin size={18} /> Qual é a Sala?
-                            </label>
-                            <select
-                                name="room_id"
-                                required
-                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                                onChange={handleChange}
-                            >
-                                <option value="">-- Seleciona uma sala --</option>
-                                {rooms.map((room) => (
-                                    <option key={room.id} value={room.id}>
-                                        {room.name} (Cap: {room.capacity})
-                                    </option>
-                                ))}
-                            </select>
+                    {/* COLUNA DA DIREITA: O CALENDÁRIO PRO */}
+                    <div className="w-full xl:w-2/3">
+                        <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+                            {/* Aqui entra o componente que criámos com o react-big-calendar */}
+                            <Scheduler />
                         </div>
+                    </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                <Calendar size={18} /> Para quando?
-                            </label>
-                            <input
-                                type="date"
-                                name="date"
-                                required
-                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                    <Clock size={18} /> Início
-                                </label>
-                                <input
-                                    type="time"
-                                    name="start_time"
-                                    required
-                                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                    <Clock size={18} /> Fim
-                                </label>
-                                <input
-                                    type="time"
-                                    name="end_time"
-                                    required
-                                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                <AlignLeft size={18} /> Motivo da Reserva
-                            </label>
-                            <textarea
-                                name="purpose"
-                                rows="3"
-                                placeholder="Ex: Aula de Reforço de Matemática..."
-                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                onChange={handleChange}
-                            ></textarea>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                        >
-                            Confirmar Reserva
-                        </button>
-
-                    </form>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }

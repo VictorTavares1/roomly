@@ -1,91 +1,87 @@
-import { Home, Calendar, PlusCircle, MapPin, LogOut, Users } from "lucide-react"; // 👈 Adicionei 'Users'
-import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react"; // 👈 Importei hooks novos
+import { Link, useLocation } from "react-router-dom";
+import {
+    LayoutDashboard,
+    LogOut,
+    PlusCircle,
+    Calendar,
+    MapPin,
+    Users,
+    Settings, // <--- Ícone Novo
+    BookOpen
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
-    const navigate = useNavigate();
     const location = useLocation();
-    const [userRole, setUserRole] = useState("professor"); // 👈 Estado para guardar o cargo
+    const { user, logout } = useAuth();
 
-    // 👇 1. Ver quem é o utilizador ao carregar
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (user && user.role) {
-            setUserRole(user.role);
-        }
-    }, []);
-
-    const isActive = (path) => {
-        return location.pathname === path
-            ? "bg-blue-800 text-white shadow-md"
-            : "text-blue-100 hover:bg-blue-800 hover:text-white hover:shadow-md";
-    };
-
-    function handleLogout() {
-        localStorage.removeItem("user");
-        navigate('/');
-    }
+    // Função auxiliar para saber qual link está ativo
+    const isActive = (path) => location.pathname === path
+        ? "bg-white/10 text-white shadow-lg"
+        : "text-blue-100 hover:bg-white/5 hover:text-white";
 
     return (
-        <aside className="w-64 bg-blue-900 text-white flex flex-col shadow-2xl h-screen fixed left-0 top-0 z-50">
+        <aside className="w-64 bg-blue-900 text-white min-h-screen p-6 flex flex-col fixed left-0 top-0 bottom-0 z-50 transition-all duration-300">
 
-            <div className="p-6 text-2xl font-bold tracking-wider flex items-center gap-2 border-b border-blue-800">
-                🚀 Roomly
+            {/* LOGO */}
+            <div className="flex items-center gap-3 mb-10 px-2">
+                <div className="bg-white/10 p-2 rounded-lg">
+                    <span className="text-2xl">🚀</span>
+                </div>
+                <div>
+                    <h1 className="text-xl font-bold tracking-tight">Roomly</h1>
+                    <p className="text-xs text-blue-300">Gestão de Salas</p>
+                </div>
             </div>
 
-            <nav className="flex-1 px-4 space-y-3 mt-6">
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${isActive('/dashboard')}`}>
-                    <Home size={20} />
-                    <span className="font-medium">Início</span>
-                </button>
+            {/* MENU PRINCIPAL */}
+            <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+                <p className="text-xs uppercase text-blue-400 font-bold px-4 mb-2 mt-2 tracking-wider">Principal</p>
 
-                <button
-                    onClick={() => navigate('/rooms')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${isActive('/rooms')}`}>
-                    <MapPin size={20} />
-                    <span className="font-medium">Ver Salas</span>
-                </button>
+                <Link to="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/dashboard')}`}>
+                    <LayoutDashboard size={20} /> Início
+                </Link>
+                <Link to="/rooms" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/rooms')}`}>
+                    <MapPin size={20} /> Ver Salas
+                </Link>
+                <Link to="/my-reservations" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/my-reservations')}`}>
+                    <Calendar size={20} /> Minhas Reservas
+                </Link>
+                <Link to="/new-reservation" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/new-reservation')}`}>
+                    <PlusCircle size={20} /> Nova Reserva
+                </Link>
 
-                <button
-                    onClick={() => navigate('/my-reservations')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${isActive('/my-reservations')}`}>
-                    <Calendar size={20} />
-                    <span className="font-medium">Minhas Reservas</span>
-                </button>
-
-                <button
-                    onClick={() => navigate('/new-reservation')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${isActive('/new-reservation')}`}>
-                    <PlusCircle size={20} />
-                    <span className="font-medium">Nova Reserva</span>
-                </button>
-
-                {/* 👇 AQUI ESTÁ A NOVIDADE: SÓ PARA ADMIN 👇 */}
-                {userRole === 'admin' && (
+                {/* MENU ADMINISTRAÇÃO (Só aparece para admin) */}
+                {user?.role === 'admin' && (
                     <>
-                        <div className="border-t border-blue-800 my-2 mx-2"></div>
-                        <p className="px-4 text-xs font-bold text-blue-300 uppercase mb-1">Admin</p>
+                        <div className="my-4 border-t border-blue-800/50"></div>
+                        <p className="text-xs uppercase text-blue-400 font-bold px-4 mb-2 tracking-wider">Administração</p>
 
-                        <button
-                            onClick={() => navigate('/manage-users')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${isActive('/manage-users')}`}>
-                            <Users size={20} />
-                            <span className="font-medium">Utilizadores</span>
-                        </button>
+                        <Link to="/create-room" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/create-room')}`}>
+                            <PlusCircle size={20} /> Criar Sala
+                        </Link>
+                        <Link to="/manage-users" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-users')}`}>
+                            <Users size={20} /> Utilizadores
+                        </Link>
+                        <Link to="/manage-reservations" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-reservations')}`}>
+                            <BookOpen size={20} /> Gerir Reservas
+                        </Link>
                     </>
                 )}
-
             </nav>
 
-            {/* BOTÃO SAIR */}
-            <div className="p-4 border-t border-blue-800 bg-blue-900">
+            {/* RODAPÉ (Configurações e Logout) */}
+            <div className="mt-auto border-t border-blue-800 pt-4 space-y-2">
+                <Link to="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/settings')}`}>
+                    <Settings size={20} /> Definições
+                </Link>
+
                 <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 text-red-200 hover:text-white hover:bg-red-600/20 w-full rounded-xl transition-all cursor-pointer font-medium">
-                    <LogOut size={20} />
-                    <span>Terminar Sessão</span>
+                    onClick={logout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all font-medium group"
+                >
+                    <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    Terminar Sessão
                 </button>
             </div>
         </aside>

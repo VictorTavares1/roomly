@@ -1,164 +1,128 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import { Trash2, UserPlus, X, ShieldAlert, Briefcase, BookOpen, RotateCcw } from "lucide-react";
+import Layout from "../components/Layout";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import Select from "../components/Select";
 import { userService } from "../services/api";
-import { Users, Trash2, Shield, GraduationCap, Plus, X } from "lucide-react"; // Importei ícones novos
+import { useAuth } from "../context/AuthContext"; // <--- IMPORTAR CONTEXTO
 
 export default function ManageUsers() {
-    const [users, setUsers] = useState([]);
-    const [showForm, setShowForm] = useState(false); // Controla se o form está visível
+    // Renomeamos 'user' para 'currentUser' para não confundir com o 'map(user)' abaixo
+    const { user: currentUser } = useAuth();
 
-    // Dados do formulário
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        role: "professor"
-    });
+    const [users, setUsers] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "professor" });
 
     useEffect(() => {
-        loadUsers();
+        carregarUsers();
     }, []);
 
-    const loadUsers = async () => {
-        try {
-            const data = await userService.getAll();
-            setUsers(data);
-        } catch (error) {
-            console.error("Erro:", error);
-        }
+    const carregarUsers = () => {
+        userService.getAll()
+            .then((data) => setUsers(data))
+            .catch((err) => console.error(err));
     };
 
-    const handleDelete = async (id, name) => {
-        if (!window.confirm(`Tens a certeza que queres apagar "${name}"?`)) return;
-        try {
-            await userService.delete(id);
-            setUsers(users.filter(user => user.id !== id));
-        } catch (error) {
-            alert("Erro ao apagar.");
-        }
-    };
-
-    // Função para criar novo utilizador
     const handleCreate = async (e) => {
-        e.preventDefault(); // Não recarregar a página
+        e.preventDefault();
         try {
-            const response = await userService.create(formData);
-
-            if (response.status === "sucesso") {
+            const res = await userService.create(formData);
+            if (res.status === "sucesso") {
                 alert("Utilizador criado!");
-                setShowForm(false); // Esconder formulário
-                setFormData({ name: "", email: "", password: "", role: "professor" }); // Limpar dados
-                loadUsers(); // Recarregar a lista
+                setShowForm(false);
+                setFormData({ name: "", email: "", password: "", role: "professor" });
+                carregarUsers();
             } else {
-                alert("Erro: " + response.mensagem);
+                alert("Erro: " + res.mensagem);
             }
-        } catch (error) {
-            alert("Erro ao criar utilizador.");
+        } catch (error) { console.error(error); }
+    };
+
+    const handleToggleStatus = async (userTarget) => {
+        const novoStatus = userTarget.is_active == 1 ? 0 : 1;
+        if (!window.confirm(`Tens a certeza que queres ${novoStatus ? 'ativar' : 'desativar'} este utilizador?`)) return;
+
+        const res = await userService.toggleStatus(userTarget.id, novoStatus);
+        if (res.status === "sucesso") {
+            setUsers(users.map(u => u.id === userTarget.id ? { ...u, is_active: novoStatus } : u));
+        }
+    };
+
+    const handleRoleChange = async (userId, newRole) => {
+        const res = await userService.changeRole(userId, newRole);
+        if (res.status === "sucesso") {
+            setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
         }
     };
 
     return (
-        <div className="flex bg-gray-50 min-h-screen">
-            <Sidebar />
-            <main className="flex-1 p-8 ml-64">
-                <div className="max-w-5xl mx-auto">
+        <Layout title="Gerir Utilizadores">
+            <div className="mb-6 flex justify-end">
+                <Button variant={showForm ? "danger" : "primary"} onClick={() => setShowForm(!showForm)}>
+                    {showForm ? <><X size={20} /> Cancelar</> : <><UserPlus size={20} /> Novo Utilizador</>}
+                </Button>
+            </div>
 
-                    <header className="mb-8 flex justify-between items-center">
-                        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                            <Users className="text-blue-600" /> Gerir Utilizadores
-                        </h1>
-
-                        {/* BOTÃO PARA ABRIR O FORMULÁRIO */}
-                        <button
-                            onClick={() => setShowForm(!showForm)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition"
-                        >
-                            {showForm ? <X size={20} /> : <Plus size={20} />}
-                            {showForm ? "Cancelar" : "Novo Utilizador"}
-                        </button>
-                    </header>
-
-                    {/* FORMULÁRIO DE CRIAÇÃO (Só aparece se showForm for true) */}
-                    {showForm && (
-                        <div className="bg-white p-6 rounded-xl shadow-md border border-blue-100 mb-8 animate-fade-in-down">
-                            <h2 className="text-xl font-bold text-gray-700 mb-4">Adicionar Nova Pessoa</h2>
-                            <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input
-                                    type="text" placeholder="Nome Completo" required
-                                    className="border p-3 rounded-lg w-full bg-gray-50"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                />
-                                <input
-                                    type="email" placeholder="Email da Escola" required
-                                    className="border p-3 rounded-lg w-full bg-gray-50"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                />
-                                <input
-                                    type="text" placeholder="Senha Inicial" required
-                                    className="border p-3 rounded-lg w-full bg-gray-50"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                />
-                                <select
-                                    className="border p-3 rounded-lg w-full bg-gray-50"
-                                    value={formData.role}
-                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                >
-                                    <option value="professor">Professor</option>
-                                    <option value="admin">Administrador</option>
-                                    <option value="staff">Funcionário (Staff)</option>
-                                </select>
-
-                                <div className="md:col-span-2">
-                                    <button type="submit" className="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition">
-                                        Confirmar Criação ✅
-                                    </button>
-                                </div>
-                            </form>
+            {showForm && (
+                <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 mb-8 animate-fade-in">
+                    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="Nome" value={formData.name} onChange={(v) => setFormData({ ...formData, name: v })} required />
+                        <Input label="Email" type="email" value={formData.email} onChange={(v) => setFormData({ ...formData, email: v })} required />
+                        <Input label="Senha" type="password" value={formData.password} onChange={(v) => setFormData({ ...formData, password: v })} required />
+                        <Select label="Cargo" value={formData.role} onChange={(v) => setFormData({ ...formData, role: v })}
+                            options={[{ id: 'professor', name: 'Professor' }, { id: 'funcionario', name: 'Funcionário' }, { id: 'admin', name: 'Admin' }]}
+                        />
+                        <div className="md:col-span-2 pt-2">
+                            <Button type="submit" variant="success" className="w-full">Confirmar Criação</Button>
                         </div>
-                    )}
-
-                    {/* LISTA DE UTILIZADORES */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b border-gray-100">
-                                <tr>
-                                    <th className="p-4 font-semibold text-gray-600">Nome</th>
-                                    <th className="p-4 font-semibold text-gray-600">Email</th>
-                                    <th className="p-4 font-semibold text-gray-600">Cargo</th>
-                                    <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {users.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50 transition">
-                                        <td className="p-4 font-medium text-gray-800">{user.name}</td>
-                                        <td className="p-4 text-gray-500">{user.email}</td>
-                                        <td className="p-4">
-                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                                                }`}>
-                                                {user.role === 'admin' ? <Shield size={12} /> : <GraduationCap size={12} />}
-                                                {user.role.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => handleDelete(user.id, user.name)}
-                                                className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
+                    </form>
                 </div>
-            </main>
-        </div>
+            )}
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold border-b">
+                        <tr><th className="p-4">Nome</th><th className="p-4">Email</th><th className="p-4">Cargo</th><th className="p-4 text-center">Estado</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {users.map((u) => {
+                            // Verifica se sou eu mesmo para desativar botões
+                            const isMe = currentUser && u.id === currentUser.id;
+                            const isInactive = u.is_active == 0;
+                            return (
+                                <tr key={u.id} className={isInactive ? "bg-gray-50 opacity-60 grayscale" : "hover:bg-gray-50"}>
+                                    <td className="p-4 font-medium flex items-center gap-2 text-slate-700">
+                                        {u.role === 'admin' && <ShieldAlert size={16} className="text-purple-600" />}
+                                        {u.role === 'professor' && <BookOpen size={16} className="text-blue-600" />}
+                                        {u.role === 'funcionario' && <Briefcase size={16} className="text-orange-600" />}
+                                        {u.name} {isMe && <span className="text-xs text-gray-400">(Eu)</span>}
+                                    </td>
+                                    <td className="p-4 text-gray-500">{u.email}</td>
+                                    <td className="p-4">
+                                        <select
+                                            value={u.role}
+                                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                            disabled={isMe || isInactive}
+                                            className="bg-transparent font-bold text-sm outline-none cursor-pointer disabled:cursor-not-allowed text-slate-600"
+                                        >
+                                            <option value="professor">Professor</option>
+                                            <option value="funcionario">Funcionário</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <Button variant={isInactive ? "success" : "danger"} onClick={() => handleToggleStatus(u)} disabled={isMe} className="!p-2 !rounded-full !w-10 !h-10 mx-auto">
+                                            {isInactive ? <RotateCcw size={18} /> : <Trash2 size={18} />}
+                                        </Button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </Layout>
     );
 }
