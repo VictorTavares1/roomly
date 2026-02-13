@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Type, Users, Projector, Save } from "lucide-react";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout"; // <--- NOVO
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { roomService } from "../services/api";
@@ -14,7 +14,6 @@ export default function CreateRoom() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
             const res = await roomService.create({
                 name,
@@ -32,8 +31,10 @@ export default function CreateRoom() {
     };
 
     return (
-        <Layout title="Adicionar Nova Sala">
-            <div className="flex justify-center items-center min-h-[60vh]">
+        <Layout>
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">Adicionar Nova Sala 🏗️</h1>
+
+            <div className="flex justify-center items-center min-h-[50vh]">
                 <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg">
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <Input label="Nome da Sala" placeholder="Ex: Laboratório de Química" value={name} onChange={setName} icon={Type} required />

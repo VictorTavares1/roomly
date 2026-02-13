@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { Trash2, UserPlus, X, ShieldAlert, Briefcase, BookOpen, RotateCcw } from "lucide-react";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout"; // <--- NOVO
 import Button from "../components/Button";
 import Input from "../components/Input";
 import Select from "../components/Select";
 import { userService } from "../services/api";
-import { useAuth } from "../context/AuthContext"; // <--- IMPORTAR CONTEXTO
+import { useAuth } from "../context/AuthContext";
 
 export default function ManageUsers() {
-    // Renomeamos 'user' para 'currentUser' para não confundir com o 'map(user)' abaixo
     const { user: currentUser } = useAuth();
-
     const [users, setUsers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "professor" });
@@ -58,7 +56,9 @@ export default function ManageUsers() {
     };
 
     return (
-        <Layout title="Gerir Utilizadores">
+        <Layout>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Gerir Utilizadores 👥</h1>
+
             <div className="mb-6 flex justify-end">
                 <Button variant={showForm ? "danger" : "primary"} onClick={() => setShowForm(!showForm)}>
                     {showForm ? <><X size={20} /> Cancelar</> : <><UserPlus size={20} /> Novo Utilizador</>}
@@ -88,7 +88,6 @@ export default function ManageUsers() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {users.map((u) => {
-                            // Verifica se sou eu mesmo para desativar botões
                             const isMe = currentUser && u.id === currentUser.id;
                             const isInactive = u.is_active == 0;
                             return (

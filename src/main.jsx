@@ -8,12 +8,12 @@ import { AuthProvider } from './context/AuthContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* ADICIONA O AUTHPROVIDER AQUI A ENVOLVER TUDO 👇 */}
+    {/* ADICIONA O AUTHPROVIDER AQUI A ENVOLVER TUDO  */}
     <AuthProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </AuthProvider>
-    {/* FECHA O AUTHPROVIDER AQUI 👆 */}
+    {/* FECHA O AUTHPROVIDER AQUI */}
   </React.StrictMode>,
 )

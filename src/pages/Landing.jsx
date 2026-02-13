@@ -1,118 +1,100 @@
 import { Link } from "react-router-dom";
-import { Calendar, Clock, Shield, ArrowRight, CheckCircle, LayoutDashboard } from "lucide-react";
+import { ArrowRight, School, ShieldCheck, Zap } from "lucide-react";
+import Logo from "../components/Logo"; // <--- Importação do Logo
 
 export default function Landing() {
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900">
+        <div className="min-h-screen flex flex-col font-sans">
 
-            {/* === NAVBAR (Menu de Topo) === */}
-            <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    {/* Logo */}
-                    <div className="flex items-center gap-2">
-                        <div className="bg-blue-600 p-2 rounded-lg text-white">
-                            <LayoutDashboard size={24} />
-                        </div>
-                        <span className="text-xl font-bold tracking-tight text-blue-900">Roomly</span>
+            {/* === NAVBAR === */}
+            <nav className="absolute top-0 left-0 w-full z-20 flex justify-between items-center p-6 md:px-12">
+                <div className="flex items-center gap-3">
+                    {/* LOGO NOVO AQUI */}
+                    <div className="bg-white/10 p-1 rounded-xl backdrop-blur-sm shadow-lg shadow-blue-500/20">
+                        <Logo className="w-10 h-10" />
                     </div>
-
-                    {/* Botão de Login */}
-                    <Link
-                        to="/login"
-                        className="px-6 py-2.5 rounded-full font-bold text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all"
-                    >
-                        Área de Cliente
-                    </Link>
+                    <span className="text-2xl font-bold text-white tracking-tight">Roomly</span>
                 </div>
+                <Link
+                    to="/login"
+                    className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-6 py-2.5 rounded-full font-medium transition-all hover:scale-105"
+                >
+                    Área de Cliente
+                </Link>
             </nav>
 
-            {/* === HERO SECTION (A parte principal) === */}
-            <header className="pt-32 pb-20 px-6 bg-gradient-to-b from-blue-50 to-white">
-                <div className="max-w-4xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-bold mb-6">
-                        <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">NOVO</span>
-                        Gestão de Salas Escolar 2.0
+            {/* === HERO SECTION === */}
+            <div className="relative flex-1 flex items-center justify-center min-h-screen overflow-hidden">
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center scale-105 animate-slow-zoom"
+                    style={{
+                        backgroundImage: "url('https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2886&auto=format&fit=crop')"
+                    }}
+                ></div>
+                <div className="absolute inset-0 z-0 bg-gradient-to-b from-blue-900/80 to-gray-900/90 mix-blend-multiply"></div>
+                <div className="absolute inset-0 z-0 bg-black/40"></div>
+
+                <div className="relative z-10 container mx-auto px-6 text-center text-white mt-10">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 backdrop-blur-md mb-8 animate-fade-in-down">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        <span className="text-sm font-medium text-blue-100 uppercase tracking-wide">Gestão Escolar 2.0</span>
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-extrabold text-blue-900 mb-6 leading-tight">
-                        Adeus papel.<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Olá organização.</span>
+                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight drop-shadow-lg">
+                        Adeus Papel. <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                            Olá Organização.
+                        </span>
                     </h1>
 
-                    <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
-                        O sistema definitivo para professores e alunos. Reserva salas, consulta horários e gere equipamentos em segundos. Simples, rápido e intuitivo.
+                    <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
+                        O sistema definitivo para reservar salas, gerir equipamentos e reportar avarias.
+                        Tudo num só lugar, acessível em qualquer dispositivo.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-16">
                         <Link
                             to="/login"
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-1 transition-all"
+                            className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
                         >
                             Começar Agora <ArrowRight size={20} />
                         </Link>
-                        <button className="px-8 py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl font-bold text-lg hover:border-blue-200 hover:text-blue-600 transition-all">
+                        <a
+                            href="#features"
+                            className="w-full md:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl font-bold text-lg backdrop-blur-sm transition-all"
+                        >
                             Saber Mais
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            {/* === FEATURES (Vantagens) === */}
-            <section className="py-20 px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-gray-800">Porquê usar o Roomly?</h2>
-                        <p className="text-gray-500 mt-2">Tudo o que precisas para gerir o espaço escolar.</p>
+                        </a>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Card 1 */}
-                        <div className="p-8 rounded-3xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:shadow-xl transition-all group">
-                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                                <Calendar size={28} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-start gap-4 hover:bg-white/10 transition-colors">
+                            <div className="p-2 bg-blue-500/20 rounded-lg text-blue-300"><Zap size={24} /></div>
+                            <div>
+                                <h3 className="font-bold text-white">Rápido</h3>
+                                <p className="text-sm text-gray-400">Reservas em menos de 10 segundos.</p>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-3">Reservas Inteligentes</h3>
-                            <p className="text-gray-500 leading-relaxed">
-                                Calendário visual para evitar conflitos. Vê quem está a usar a sala e marca o teu horário num clique.
-                            </p>
                         </div>
-
-                        {/* Card 2 */}
-                        <div className="p-8 rounded-3xl bg-gray-50 border border-gray-100 hover:border-purple-200 hover:shadow-xl transition-all group">
-                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-purple-600 shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                                <Clock size={28} />
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-start gap-4 hover:bg-white/10 transition-colors">
+                            <div className="p-2 bg-purple-500/20 rounded-lg text-purple-300"><ShieldCheck size={24} /></div>
+                            <div>
+                                <h3 className="font-bold text-white">Seguro</h3>
+                                <p className="text-sm text-gray-400">Controlo total de acessos e cargos.</p>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-3">Tempo Real</h3>
-                            <p className="text-gray-500 leading-relaxed">
-                                Dashboard atualizado ao segundo. Estatísticas de uso, salas livres agora e gestão de permissões.
-                            </p>
                         </div>
-
-                        {/* Card 3 */}
-                        <div className="p-8 rounded-3xl bg-gray-50 border border-gray-100 hover:border-green-200 hover:shadow-xl transition-all group">
-                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-green-600 shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                                <Shield size={28} />
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-start gap-4 hover:bg-white/10 transition-colors">
+                            <div className="p-2 bg-green-500/20 rounded-lg text-green-300"><School size={24} /></div>
+                            <div>
+                                <h3 className="font-bold text-white">Organizado</h3>
+                                <p className="text-sm text-gray-400">Fim dos conflitos de horários.</p>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-3">Segurança Total</h3>
-                            <p className="text-gray-500 leading-relaxed">
-                                Controlo de acesso por cargos (Admin/Professor). Os teus dados e reservas estão sempre protegidos.
-                            </p>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* === FOOTER === */}
-            <footer className="bg-gray-900 text-white py-12 px-6">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <span className="text-2xl">🚀</span>
-                        <span className="font-bold text-xl">Roomly</span>
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                        &copy; 2024 Projeto Roomly. Feito com 💙 na Escola.
-                    </div>
-                </div>
+            <footer className="absolute bottom-0 w-full py-6 text-center z-10">
+                <p className="text-xs text-white/30">© 2024 Roomly. Feito com 💙 para a escola.</p>
             </footer>
         </div>
     );
