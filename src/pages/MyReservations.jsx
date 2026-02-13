@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { Trash2, Clock, MapPin, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout"; // <--- NOVO
 import { reservationService } from "../services/api";
-import { useAuth } from "../context/AuthContext"; // <--- USAR CONTEXT
+import { useAuth } from "../context/AuthContext";
 
 export default function MyReservations() {
-    const { user } = useAuth(); // <--- USER DO CONTEXTO
+    const { user } = useAuth();
     const [reservations, setReservations] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         if (user?.id) {
-            reservationService.getMyReservations(user.id) // <--- USA ID DO CONTEXTO
+            reservationService.getMyReservations(user.id)
                 .then((data) => setReservations(data))
                 .catch((err) => console.error(err));
         }
@@ -24,7 +24,7 @@ export default function MyReservations() {
         try {
             const res = await reservationService.cancel(id);
             if (res.status === "sucesso") {
-                setReservations(reservations.filter((r) => r.id !== id));
+                setReservations((prev) => prev.filter((r) => r.id !== id));
             } else {
                 alert("Erro: " + res.mensagem);
             }
@@ -32,7 +32,8 @@ export default function MyReservations() {
     };
 
     return (
-        <Layout title="Minhas Reservas">
+        <Layout>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Minhas Reservas 🗓️</h1>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 {reservations.length === 0 ? (
                     <div className="p-8 text-center text-gray-500">Ainda não tens reservas feitas.</div>

@@ -17,6 +17,7 @@ export default function Button({
         primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30",
         danger: "bg-red-500 hover:bg-red-600 text-white shadow-red-500/30",
         success: "bg-green-500 hover:bg-green-600 text-white shadow-green-500/30",
+        warning: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/30",
         outline: "bg-white border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
     };
 

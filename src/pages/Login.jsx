@@ -1,87 +1,116 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { LogIn, Lock, Mail } from "lucide-react";
-import Button from "../components/Button";
-import Input from "../components/Input";
-import { authService } from "../services/api";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Mail, Lock, ArrowRight, Loader, ArrowLeft } from "lucide-react";
+import Logo from "../components/Logo"; // <--- Importação do Logo
 
 export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-  const { login } = useAuth();
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      console.log("1. A enviar pedido..."); // Debug
-      const data = await authService.login(email, password);
-      console.log("2. Resposta recebida do PHP:", data); // Debug
-
-      // === AQUI ESTAVA O PROBLEMA PROVAVELMENTE ===
-      // O teu PHP envia "status": "sucesso"
-      // Temos de verificar exatamente essa palavra!
-      if (data.status === "sucesso") {
-        console.log("3. Login aprovado! A guardar dados...");
-
-        // Guarda os dados no contexto
-        login(data.user);
-
-        console.log("4. A redirecionar para o Dashboard...");
-        // Força a ida para o dashboard
-        navigate("/dashboard", { replace: true });
-      } else {
-        console.warn("3. PHP disse que não:", data.mensagem);
-        setError(data.mensagem || "Erro desconhecido no login.");
-        setLoading(false);
-      }
+      await login(email, password);
+      navigate("/dashboard");
     } catch (err) {
-      console.error("ERRO CRÍTICO NO REACT:", err);
-      setError("Erro de conexão. Confirma se o XAMPP está ligado.");
+      setError("Email ou senha incorretos.");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen w-full bg-white">
-      <div className="hidden lg:flex w-1/2 bg-blue-600 relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-700 opacity-90 z-10"></div>
-        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover" alt="Office" />
-        <div className="relative z-20 text-white p-12 max-w-lg">
-          <div className="bg-white/20 backdrop-blur-lg p-4 rounded-2xl w-fit mb-6 shadow-xl"><span className="text-4xl">🚀</span></div>
-          <h1 className="text-5xl font-bold mb-6 leading-tight">Gestão de Espaços Simplificada.</h1>
-          <p className="text-blue-100 text-lg leading-relaxed">O Roomly ajuda escolas e empresas a organizar reservas.</p>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
+
+      {/* FUNDO */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center scale-105"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2886&auto=format&fit=crop')"
+        }}
+      ></div>
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-900/90 to-gray-900/95 mix-blend-multiply"></div>
+
+      <Link to="/" className="absolute top-6 left-6 z-20 text-white/70 hover:text-white flex items-center gap-2 transition-colors">
+        <ArrowLeft size={20} /> Voltar ao Início
+      </Link>
+
+      {/* CARD DE LOGIN */}
+      <div className="relative z-10 w-full max-w-md p-8 m-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl animate-fade-in-up">
+
+        {/* CABEÇALHO DO CARD COM LOGO NOVO */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Logo className="w-16 h-16 shadow-lg shadow-blue-600/40 rounded-2xl" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2">Bem-vindo!</h2>
+          <p className="text-blue-200 text-sm">Insere as tuas credenciais para entrar.</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-100 text-sm text-center font-medium animate-shake">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="group">
+            <label className="block text-xs font-bold text-blue-200 uppercase mb-2 ml-1">Email Escolar</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-white transition-colors" size={20} />
+              <input
+                type="email"
+                placeholder="exemplo@escola.pt"
+                className="w-full pl-12 pr-4 py-3.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-black/30 transition-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="group">
+            <label className="block text-xs font-bold text-blue-200 uppercase mb-2 ml-1">Palavra-passe</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-white transition-colors" size={20} />
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full pl-12 pr-4 py-3.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-black/30 transition-all"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 mt-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader className="animate-spin" size={20} /> : <>Entrar no Sistema <ArrowRight size={20} /></>}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-white/40">
+            Esqueceste-te da senha? <span className="text-blue-300 hover:text-white cursor-pointer transition-colors">Contacta a secretaria.</span>
+          </p>
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo de volta! 👋</h2>
-            <p className="text-gray-500">Introduz os teus dados para entrar.</p>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg text-sm flex items-center animate-fade-in">⚠️ {error}</div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <Input label="Email" type="email" placeholder="exemplo@escola.pt" value={email} onChange={setEmail} icon={Mail} required />
-            <Input label="Senha" type="password" placeholder="••••••••" value={password} onChange={setPassword} icon={Lock} required />
-
-            <Button type="submit" variant="primary" className="w-full py-4 text-lg" isLoading={loading}>
-              <LogIn size={20} /> Entrar no Sistema
-            </Button>
-          </form>
-          <p className="mt-8 text-center text-sm text-gray-400">Esqueceste-te da senha? Contacta o <span className="text-blue-600 font-bold cursor-pointer">Admin</span>.</p>
-        </div>
+      <div className="absolute bottom-4 text-xs text-white/20">
+        © 2024 Roomly Education
       </div>
     </div>
   );

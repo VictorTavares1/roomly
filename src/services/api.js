@@ -81,3 +81,9 @@ export const userService = {
 export const dashboardService = {
   getStats: (userId) => request(`get_dashboard_stats.php?user_id=${userId}`),
 };
+
+export const reportService = {
+  getAll: () => request("get_reports.php"),
+  create: (data) => request("create_report.php", "POST", data),
+  updateStatus: (id, status) => request("update_report_status.php", "POST", { id, status }),
+};

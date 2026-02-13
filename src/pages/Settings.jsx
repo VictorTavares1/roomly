@@ -1,29 +1,23 @@
 import { useState, useEffect } from "react";
-import { User, Lock, Shield, Save, Bell, CheckCircle, AlertTriangle } from "lucide-react";
-import Sidebar from "../components/Sidebar";
+import { User, Lock, Shield, Save, CheckCircle, AlertTriangle } from "lucide-react";
+import Layout from "../components/Layout"; // <--- NOVO
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { userService, authService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function Settings() {
-    const { user, login } = useAuth();
+    const { user, updateUser } = useAuth();
 
-    const [activeTab, setActiveTab] = useState("profile"); // 'profile' ou 'security'
-
-    // Estados do Perfil
+    const [activeTab, setActiveTab] = useState("profile");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-
-    // Estados da Senha
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
 
-    // Carregar dados ao iniciar
     useEffect(() => {
         if (user) {
             setName(user.name || "");
@@ -31,14 +25,12 @@ export default function Settings() {
         }
     }, [user]);
 
-    // Função para obter iniciais
     const getInitials = (n) => {
         if (!n) return "U";
         const names = n.split(' ');
         return names.length === 1 ? names[0].charAt(0) : names[0].charAt(0) + names[names.length - 1].charAt(0);
     };
 
-    // --- AÇÃO 1: Atualizar Perfil ---
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setMessage(null);
@@ -54,7 +46,7 @@ export default function Settings() {
             if (res.status === "sucesso") {
                 setMessage({ type: "success", text: "Perfil atualizado com sucesso!" });
                 if (res.user) {
-                    login(res.user); // Atualiza o contexto
+                    updateUser(res.user);
                 }
             } else {
                 setMessage({ type: "error", text: res.mensagem });
@@ -67,7 +59,6 @@ export default function Settings() {
         }
     };
 
-    // --- AÇÃO 2: Atualizar Senha ---
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -102,90 +93,87 @@ export default function Settings() {
     };
 
     return (
-        <div className="flex bg-gray-50 min-h-screen">
-            <Sidebar />
-            <div className="ml-64 flex-1 p-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6">Definições ⚙️</h1>
+        <Layout>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Definições </h1>
 
-                <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-8">
 
-                    {/* MENU LATERAL */}
-                    <div className="w-full lg:w-64 flex flex-col gap-2">
-                        <button
-                            onClick={() => setActiveTab("profile")}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
-                            ${activeTab === "profile" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:bg-white hover:text-gray-700"}`}
-                        >
-                            <User size={20} /> Meu Perfil
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("security")}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
-                            ${activeTab === "security" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:bg-white hover:text-gray-700"}`}
-                        >
-                            <Lock size={20} /> Segurança
-                        </button>
-                    </div>
+                {/* MENU LATERAL */}
+                <div className="w-full lg:w-64 flex flex-col gap-2">
+                    <button
+                        onClick={() => setActiveTab("profile")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
+                        ${activeTab === "profile" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:bg-white hover:text-gray-700"}`}
+                    >
+                        <User size={20} /> Meu Perfil
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("security")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
+                        ${activeTab === "security" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:bg-white hover:text-gray-700"}`}
+                    >
+                        <Lock size={20} /> Segurança
+                    </button>
+                </div>
 
-                    {/* CONTEÚDO */}
-                    <div className="flex-1 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 min-h-[500px]">
+                {/* CONTEÚDO */}
+                <div className="flex-1 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 min-h-[500px]">
 
-                        {/* Feedback */}
-                        {message && (
-                            <div className={`p-4 mb-6 rounded-xl text-center font-medium flex items-center justify-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                                {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
-                                {message.text}
-                            </div>
-                        )}
+                    {/* Feedback */}
+                    {message && (
+                        <div className={`p-4 mb-6 rounded-xl text-center font-medium flex items-center justify-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                            {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+                            {message.text}
+                        </div>
+                    )}
 
-                        {/* ABA PERFIL */}
-                        {activeTab === "profile" && (
-                            <div className="animate-fadeIn">
-                                <div className="flex items-center gap-6 mb-8 border-b border-gray-100 pb-6">
-                                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600 border-4 border-blue-50">
-                                        {getInitials(user?.name)}
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold text-gray-800">{user?.name}</h2>
-                                        <p className="text-gray-500">{user?.email}</p>
-                                        <span className="inline-block mt-2 px-3 py-1 bg-gray-100 text-xs font-bold uppercase rounded-full text-gray-600">
-                                            {user?.role}
-                                        </span>
-                                    </div>
+                    {/* ABA PERFIL */}
+                    {activeTab === "profile" && (
+                        <div className="animate-fadeIn">
+                            <div className="flex items-center gap-6 mb-8 border-b border-gray-100 pb-6">
+                                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600 border-4 border-blue-50">
+                                    {getInitials(user?.name)}
                                 </div>
-
-                                <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-lg">
-                                    <Input label="Nome de Exibição" value={name} onChange={setName} icon={User} />
-                                    <Input label="Email" type="email" value={email} onChange={setEmail} icon={User} />
-                                    <div className="pt-4">
-                                        <Button type="submit" variant="primary" isLoading={loading}>
-                                            <Save size={18} /> Guardar Alterações
-                                        </Button>
-                                    </div>
-                                </form>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-800">{user?.name}</h2>
+                                    <p className="text-gray-500">{user?.email}</p>
+                                    <span className="inline-block mt-2 px-3 py-1 bg-gray-100 text-xs font-bold uppercase rounded-full text-gray-600">
+                                        {user?.role}
+                                    </span>
+                                </div>
                             </div>
-                        )}
 
-                        {/* ABA SEGURANÇA */}
-                        {activeTab === "security" && (
-                            <div className="animate-fadeIn">
-                                <h2 className="text-xl font-bold text-gray-800 mb-2">Alterar Senha</h2>
-                                <p className="text-gray-500 mb-8 text-sm">Escolhe uma senha forte.</p>
-
-                                <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-lg">
-                                    <Input label="Senha Atual" type="password" value={currentPassword} onChange={setCurrentPassword} icon={Lock} required />
-                                    <hr className="border-gray-100" />
-                                    <Input label="Nova Senha" type="password" value={newPassword} onChange={setNewPassword} icon={Shield} required />
-                                    <Input label="Confirmar Nova Senha" type="password" value={confirmPassword} onChange={setConfirmPassword} icon={Shield} required />
-                                    <Button type="submit" variant="primary" isLoading={loading} className="mt-4 w-full">
-                                        Atualizar Senha
+                            <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-lg">
+                                <Input label="Nome de Exibição" value={name} onChange={setName} icon={User} />
+                                <Input label="Email" type="email" value={email} onChange={setEmail} icon={User} />
+                                <div className="pt-4">
+                                    <Button type="submit" variant="primary" isLoading={loading}>
+                                        <Save size={18} /> Guardar Alterações
                                     </Button>
-                                </form>
-                            </div>
-                        )}
-                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* ABA SEGURANÇA */}
+                    {activeTab === "security" && (
+                        <div className="animate-fadeIn">
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">Alterar Senha</h2>
+                            <p className="text-gray-500 mb-8 text-sm">Escolhe uma senha forte.</p>
+
+                            <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-lg">
+                                <Input label="Senha Atual" type="password" value={currentPassword} onChange={setCurrentPassword} icon={Lock} required />
+                                <hr className="border-gray-100" />
+                                <Input label="Nova Senha" type="password" value={newPassword} onChange={setNewPassword} icon={Shield} required />
+                                <Input label="Confirmar Nova Senha" type="password" value={confirmPassword} onChange={setConfirmPassword} icon={Shield} required />
+                                <Button type="submit" variant="primary" isLoading={loading} className="mt-4 w-full">
+                                    Atualizar Senha
+                                </Button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
-        </div>
+        </Layout>
     );
 }

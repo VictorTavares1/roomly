@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
-import { Users, Calendar, MapPin, TrendingUp, CheckCircle } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { Users, Calendar, MapPin, TrendingUp, CheckCircle, ShieldAlert } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Layout from "../components/Layout";
 import { dashboardService } from "../services/api";
-import { useAuth } from "../context/AuthContext"; // <--- USAR CONTEXT
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
-    const { user } = useAuth(); // <--- JÁ TEMOS O USER AQUI!
+    const { user } = useAuth();
+    const location = useLocation();
+    const wasUnauthorized = location.state?.unauthorized;
     const [stats, setStats] = useState({
         rooms: 0,
         reservations_today: 0,
@@ -22,7 +25,7 @@ export default function Dashboard() {
                 })
                 .catch((err) => console.error("Erro:", err));
         }
-    }, [user]); // Atualiza se o user mudar
+    }, [user]);
 
     const StatCard = ({ icon: Icon, label, value, color }) => (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -37,11 +40,24 @@ export default function Dashboard() {
     );
 
     return (
-        <Layout title={`Olá, ${user?.name || 'Visitante'}!`}> {/* Título dinâmico */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Layout>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-800">Olá, {user?.name || 'Visitante'}! 👋</h1>
+                <p className="text-gray-500 mt-1">Aqui está o resumo da tua atividade.</p>
+                {wasUnauthorized && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800">
+                        <ShieldAlert size={20} />
+                        <span>Não tens permissão para aceder a essa página.</span>
+                    </div>
+                )}
+            </div>
+
+            <div className={`grid grid-cols-1 gap-6 mb-8 ${(user?.role === 'admin' || user?.role === 'funcionario') ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                 <StatCard icon={CheckCircle} label="Salas Disponíveis" value={stats.rooms} color="bg-blue-500" />
                 <StatCard icon={Calendar} label="Minhas Reservas Hoje" value={stats.reservations_today} color="bg-green-500" />
-                <StatCard icon={Users} label="Utilizadores Ativos" value={stats.users} color="bg-purple-500" />
+                {(user?.role === 'admin' || user?.role === 'funcionario') && (
+                    <StatCard icon={Users} label="Utilizadores Ativos" value={stats.users} color="bg-purple-500" />
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

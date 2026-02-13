@@ -6,10 +6,14 @@ import {
     Calendar,
     MapPin,
     Users,
-    Settings, // <--- Ícone Novo
-    BookOpen
+    Settings,
+    BookOpen,
+    AlertTriangle,
+    Wrench,
+    ClipboardList
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Logo from "./Logo"; // <--- Importação do Logo
 
 export default function Sidebar() {
     const location = useLocation();
@@ -21,12 +25,12 @@ export default function Sidebar() {
         : "text-blue-100 hover:bg-white/5 hover:text-white";
 
     return (
-        <aside className="w-64 bg-blue-900 text-white min-h-screen p-6 flex flex-col fixed left-0 top-0 bottom-0 z-50 transition-all duration-300">
+        <aside className="w-64 bg-blue-900 text-white h-full flex flex-col transition-all duration-300">
 
-            {/* LOGO */}
-            <div className="flex items-center gap-3 mb-10 px-2">
-                <div className="bg-white/10 p-2 rounded-lg">
-                    <span className="text-2xl">🚀</span>
+            {/* LOGO NOVO */}
+            <div className="flex items-center gap-3 mb-10 px-4 pt-6">
+                <div className="bg-white/10 p-1 rounded-xl">
+                    <Logo className="w-10 h-10" />
                 </div>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight">Roomly</h1>
@@ -35,7 +39,7 @@ export default function Sidebar() {
             </div>
 
             {/* MENU PRINCIPAL */}
-            <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+            <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar px-2">
                 <p className="text-xs uppercase text-blue-400 font-bold px-4 mb-2 mt-2 tracking-wider">Principal</p>
 
                 <Link to="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/dashboard')}`}>
@@ -51,27 +55,42 @@ export default function Sidebar() {
                     <PlusCircle size={20} /> Nova Reserva
                 </Link>
 
-                {/* MENU ADMINISTRAÇÃO (Só aparece para admin) */}
-                {user?.role === 'admin' && (
+                <Link to="/report-issue" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/report-issue')}`}>
+                    <AlertTriangle size={20} /> Reportar Problema
+                </Link>
+                <Link to="/my-reports" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/my-reports')}`}>
+                    <ClipboardList size={20} /> Meus Reports
+                </Link>
+
+                {/* MENU ADMINISTRAÇÃO */}
+                {(user?.role === 'admin' || user?.role === 'funcionario') && (
                     <>
                         <div className="my-4 border-t border-blue-800/50"></div>
                         <p className="text-xs uppercase text-blue-400 font-bold px-4 mb-2 tracking-wider">Administração</p>
 
-                        <Link to="/create-room" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/create-room')}`}>
-                            <PlusCircle size={20} /> Criar Sala
+                        <Link to="/manage-reports" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-reports')}`}>
+                            <Wrench size={20} /> Manutenção
                         </Link>
-                        <Link to="/manage-users" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-users')}`}>
-                            <Users size={20} /> Utilizadores
-                        </Link>
-                        <Link to="/manage-reservations" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-reservations')}`}>
-                            <BookOpen size={20} /> Gerir Reservas
-                        </Link>
+
+                        {user?.role === 'admin' && (
+                            <>
+                                <Link to="/create-room" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/create-room')}`}>
+                                    <PlusCircle size={20} /> Criar Sala
+                                </Link>
+                                <Link to="/manage-users" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-users')}`}>
+                                    <Users size={20} /> Utilizadores
+                                </Link>
+                                <Link to="/manage-reservations" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-reservations')}`}>
+                                    <BookOpen size={20} /> Gerir Reservas
+                                </Link>
+                            </>
+                        )}
                     </>
                 )}
             </nav>
 
-            {/* RODAPÉ (Configurações e Logout) */}
-            <div className="mt-auto border-t border-blue-800 pt-4 space-y-2">
+            {/* RODAPÉ */}
+            <div className="mt-auto border-t border-blue-800 p-4 space-y-2">
                 <Link to="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/settings')}`}>
                     <Settings size={20} /> Definições
                 </Link>
