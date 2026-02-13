@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 // Importação das Páginas
-import Landing from './pages/Landing'; // <--- NOVA PÁGINA (A Capa do Site)
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Rooms from './pages/Rooms';
@@ -16,7 +16,13 @@ import CreateRoom from './pages/CreateRoom';
 import ManageUsers from './pages/ManageUsers';
 import ManageReservations from './pages/ManageReservations';
 
-// Componente para proteger rotas (Só entra se tiver login)
+import ReportIssue from './pages/ReportIssue';
+import ManageReports from './pages/ManageReports';
+import MyReports from './pages/MyReports';
+import EditRoom from './pages/EditRoom';
+import EditReservation from './pages/EditReservation';
+
+// Protege rotas que requerem login
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -24,21 +30,31 @@ function PrivateRoute({ children }) {
     return <div className="flex h-screen items-center justify-center text-blue-600 font-bold">A carregar Roomly...</div>;
   }
 
-  // MUDANÇA: Se não tiver logado, manda para /login (em vez da Landing Page)
   return user ? children : <Navigate to="/login" />;
+}
+
+// Protege rotas por role (ex: só admin, ou admin + funcionário)
+function RoleRoute({ children, allowedRoles }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center text-blue-600 font-bold">A carregar Roomly...</div>;
+  }
+
+  if (!user) return <Navigate to="/login" />;
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" state={{ unauthorized: true }} replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
   return (
     <Routes>
       {/* === ROTAS PÚBLICAS === */}
-
-      {/* A Raiz agora é a Landing Page (Apresentação) */}
       <Route path="/" element={<Landing />} />
-
-      {/* O Login agora tem um endereço próprio */}
       <Route path="/login" element={<Login />} />
-
 
       {/* === ROTAS PRIVADAS (Só com Login) === */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -47,16 +63,25 @@ export default function App() {
       <Route path="/rooms" element={<PrivateRoute><Rooms /></PrivateRoute>} />
       <Route path="/my-reservations" element={<PrivateRoute><MyReservations /></PrivateRoute>} />
       <Route path="/new-reservation" element={<PrivateRoute><NewReservation /></PrivateRoute>} />
-
-      {/* Rota de Definições */}
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
-      {/* Rotas de Admin */}
-      <Route path="/create-room" element={<PrivateRoute><CreateRoom /></PrivateRoute>} />
-      <Route path="/manage-users" element={<PrivateRoute><ManageUsers /></PrivateRoute>} />
-      <Route path="/manage-reservations" element={<PrivateRoute><ManageReservations /></PrivateRoute>} />
+      {/* Reportar e ver reports (todos os utilizadores) */}
+      <Route path="/report-issue" element={<PrivateRoute><ReportIssue /></PrivateRoute>} />
+      <Route path="/my-reports" element={<PrivateRoute><MyReports /></PrivateRoute>} />
 
-      {/* Qualquer outra rota desconhecida vai para a Landing Page */}
+      {/* Editar Sala (apenas admin) / Reserva (dono ou admin) */}
+      <Route path="/edit-room" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><EditRoom /></RoleRoute></PrivateRoute>} />
+      <Route path="/edit-reservation" element={<PrivateRoute><EditReservation /></PrivateRoute>} />
+
+      {/* Rotas de Manutenção (admin + funcionário) */}
+      <Route path="/manage-reports" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'funcionario']}><ManageReports /></RoleRoute></PrivateRoute>} />
+
+      {/* Rotas de Admin (apenas admin) */}
+      <Route path="/create-room" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><CreateRoom /></RoleRoute></PrivateRoute>} />
+      <Route path="/manage-users" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><ManageUsers /></RoleRoute></PrivateRoute>} />
+      <Route path="/manage-reservations" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><ManageReservations /></RoleRoute></PrivateRoute>} />
+
+      {/* Qualquer outra rota vai para a Landing Page */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

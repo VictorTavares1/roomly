@@ -27,7 +27,7 @@ export default function Rooms() {
         try {
             const res = await roomService.delete(id);
             if (res.status === "sucesso") {
-                setRooms(rooms.filter((sala) => sala.id !== id));
+                setRooms((prev) => prev.filter((sala) => sala.id !== id));
             } else {
                 alert("Erro: " + res.mensagem);
             }

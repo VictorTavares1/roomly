@@ -19,7 +19,7 @@ const localizer = dateFnsLocalizer({
     locales,
 });
 
-export default function Scheduler() {
+export default function Scheduler({ roomId, date }) {
     const [events, setEvents] = useState([]);
 
     useEffect(() => {
@@ -27,12 +27,12 @@ export default function Scheduler() {
             try {
                 const data = await reservationService.getCalendarEvents();
 
-                // Converter strings para objetos Date
-                const formattedEvents = data.map(event => ({
+                const formattedEvents = data.map((event) => ({
                     title: `${event.room_name} (${event.user_name})`,
                     start: new Date(event.start_time),
                     end: new Date(event.end_time),
-                    resource: event
+                    resource: event,
+                    rooms_id: event.rooms_id ?? event.room_id,
                 }));
 
                 setEvents(formattedEvents);
@@ -43,11 +43,28 @@ export default function Scheduler() {
         fetchEvents();
     }, []);
 
+    // Filtra por sala e/ou data quando fornecidos
+    const filteredEvents = events.filter((ev) => {
+        const matchRoom = !roomId || String(ev.resource?.rooms_id ?? ev.resource?.room_id) === String(roomId);
+        if (!matchRoom) return false;
+        if (!date) return true;
+        const evDate = ev.start.toISOString().slice(0, 10);
+        return evDate === date;
+    });
+
+    const defaultDate = date ? new Date(date) : new Date();
+
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-[600px]">
+            {roomId && date && (
+                <p className="text-sm text-gray-500 mb-3">
+                    Ocupações da sala selecionada em <strong>{new Date(date + "T12:00:00").toLocaleDateString("pt-PT")}</strong>
+                </p>
+            )}
             <Calendar
                 localizer={localizer}
-                events={events}
+                events={filteredEvents}
+                date={defaultDate}
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: "100%" }}

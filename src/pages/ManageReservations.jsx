@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Trash2, Calendar, Clock, MapPin, Search } from "lucide-react";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout"; // <--- NOVO
 import SearchBar from "../components/SearchBar";
 import Button from "../components/Button";
 import { reservationService } from "../services/api";
@@ -25,7 +25,7 @@ export default function ManageReservations() {
         try {
             const res = await reservationService.cancel(id);
             if (res.status === "sucesso") {
-                setReservations(reservations.filter((r) => r.id !== id));
+                setReservations((prev) => prev.filter((r) => r.id !== id));
             } else {
                 alert("Erro: " + res.mensagem);
             }
@@ -43,7 +43,9 @@ export default function ManageReservations() {
     });
 
     return (
-        <Layout title="Gerir Todas as Reservas">
+        <Layout>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Gerir Todas as Reservas 👮‍♂️</h1>
+
             <div className="mb-6">
                 <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Pesquisar por nome, sala, motivo..." />
             </div>

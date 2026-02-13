@@ -1,71 +1,144 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Clock, MapPin, FileText, Save } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Calendar, Clock, MapPin, AlignLeft, Save, ArrowLeft } from "lucide-react";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
-import Select from "../components/Select";
 import Button from "../components/Button";
 import { roomService, reservationService } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function EditReservation() {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const reservaAtual = location.state?.reservation;
-
-    if (!reservaAtual) {
-        navigate('/my-reservations');
-        return null;
-    }
+    const reservation = location.state?.reservation;
 
     const [rooms, setRooms] = useState([]);
-    const [formData, setFormData] = useState({
-        id: reservaAtual.id,
-        rooms_id: reservaAtual.rooms_id || "",
-        start_time: reservaAtual.start_time.replace(' ', 'T'),
-        end_time: reservaAtual.end_time.replace(' ', 'T'),
-        purpose: reservaAtual.purpose
-    });
+    const [roomId, setRoomId] = useState("");
+    const [date, setDate] = useState("");
+    const [startTime, setStartTime] = useState("");
+    const [endTime, setEndTime] = useState("");
+    const [purpose, setPurpose] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        roomService.getAll()
-            .then(data => setRooms(data))
-            .catch(err => console.error(err));
-    }, []);
+        if (!reservation) {
+            navigate("/my-reservations", { replace: true });
+            return;
+        }
+        // Apenas o dono da reserva ou admin pode editar
+        if (reservation.user_id !== user?.id && user?.role !== "admin") {
+            navigate("/my-reservations", { replace: true });
+            return;
+        }
+        roomService.getAll().then(setRooms).catch(console.error);
+    }, [reservation, user, navigate]);
 
-    const handleChange = (name, value) => setFormData({ ...formData, [name]: value });
+    useEffect(() => {
+        if (!reservation) return;
+        const start = new Date(reservation.start_time);
+        const end = new Date(reservation.end_time);
+
+        setRoomId(String(reservation.rooms_id || reservation.room_id || ""));
+        setDate(start.toISOString().slice(0, 10));
+        setStartTime(start.toTimeString().slice(0, 5));
+        setEndTime(end.toTimeString().slice(0, 5));
+        setPurpose(reservation.purpose || "");
+    }, [reservation]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        if (startTime >= endTime) {
+            setError("A hora de fim tem de ser depois do início.");
+            setLoading(false);
+            return;
+        }
+
         try {
-            const res = await reservationService.update(formData);
+            const res = await reservationService.update({
+                id: reservation.id,
+                rooms_id: roomId,
+                start_time: `${date} ${startTime}:00`,
+                end_time: `${date} ${endTime}:00`,
+                purpose
+            });
 
             if (res.status === "sucesso") {
-                alert("Reserva alterada com sucesso! 📅");
-                navigate('/my-reservations');
+                alert("Reserva atualizada com sucesso! 🎉");
+                navigate("/my-reservations");
             } else {
-                alert("Erro: " + res.mensagem);
+                setError(res.mensagem || "Erro ao atualizar reserva.");
             }
-        } catch (error) { console.error("Erro:", error); }
+        } catch (err) {
+            console.error("Erro:", err);
+            setError("Erro ao atualizar reserva. Verifica se a sala não está ocupada nesse horário.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    return (
-        <Layout title="Editar Reserva">
-            <div className="flex justify-center">
-                <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border border-gray-100">
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <Select
-                            label="Sala" icon={MapPin} options={rooms}
-                            value={formData.rooms_id} onChange={(val) => handleChange("rooms_id", val)} required
-                        />
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input label="Início" type="datetime-local" icon={Clock} value={formData.start_time} onChange={(val) => handleChange("start_time", val)} required />
-                            <Input label="Fim" type="datetime-local" icon={Clock} value={formData.end_time} onChange={(val) => handleChange("end_time", val)} required />
-                        </div>
-                        <Input label="Motivo" icon={FileText} value={formData.purpose} onChange={(val) => handleChange("purpose", val)} required />
+    if (!reservation) return null;
 
-                        <Button type="submit" variant="primary" className="w-full pt-4">
-                            <Save size={20} /> Guardar Alterações
-                        </Button>
+    return (
+        <Layout>
+            <div className="mb-6">
+                <button
+                    onClick={() => navigate("/my-reservations")}
+                    className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-medium transition-colors"
+                >
+                    <ArrowLeft size={18} /> Voltar às Minhas Reservas
+                </button>
+            </div>
+
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">Editar Reserva ✏️</h1>
+
+            <div className="max-w-xl">
+                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                    {error && (
+                        <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Sala</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-3.5 text-gray-400" size={20} />
+                                <select
+                                    value={roomId}
+                                    onChange={(e) => setRoomId(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none font-medium text-slate-700 shadow-sm"
+                                    required
+                                >
+                                    {rooms.map((r) => (
+                                        <option key={r.id} value={r.id}>
+                                            {r.name} (Cap: {r.capacity})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <Input label="Data" type="date" value={date} onChange={setDate} icon={Calendar} required />
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input label="Hora Início" type="time" value={startTime} onChange={setStartTime} icon={Clock} required />
+                            <Input label="Hora Fim" type="time" value={endTime} onChange={setEndTime} icon={Clock} required />
+                        </div>
+
+                        <Input label="Motivo" type="text" placeholder="Ex: Aula de Apoio" value={purpose} onChange={setPurpose} icon={AlignLeft} required />
+
+                        <div className="flex gap-3 pt-4">
+                            <Button type="button" variant="outline" onClick={() => navigate("/my-reservations")} className="flex-1">
+                                Cancelar
+                            </Button>
+                            <Button type="submit" variant="primary" className="flex-1" isLoading={loading}>
+                                <Save size={18} /> Guardar Alterações
+                            </Button>
+                        </div>
                     </form>
                 </div>
             </div>
