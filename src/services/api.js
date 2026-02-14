@@ -43,47 +43,49 @@ async function request(endpoint, method = "GET", data = null) {
   }
 }
 
+// ... (código inicial igual)
+
 // === SERVIÇOS ===
 
 export const authService = {
-  login: (email, password) => request("login.php", "POST", { email, password }),
-  updatePassword: (data) => request("update_password.php", "POST", data),
+  login: (email, password) => request("api/auth/login.php", "POST", { email, password }),
+  updatePassword: (data) => request("api/auth/update_password.php", "POST", data),
 };
 
 export const roomService = {
-  getAll: () => request("get_rooms.php"),
-  create: (data) => request("create_room.php", "POST", data),
-  update: (data) => request("update_room.php", "POST", data),
-  delete: (id) => request("delete_room.php", "POST", { id }),
+  getAll: () => request("api/rooms/list.php"),
+  create: (data) => request("api/rooms/create.php", "POST", data),
+  update: (data) => request("api/rooms/update.php", "POST", data),
+  delete: (id) => request("api/rooms/delete.php", "POST", { id }),
 };
 
 export const reservationService = {
-  getAll: () => request("get_all_reservations.php"),
+  getAll: () => request("api/reservations/list_all.php"),
 
   // Funções novas para o Calendário e Agenda:
-  getByDate: (date) => request(`get_reservations_by_date.php?date=${date}`),
-  getCalendarEvents: () => request("get_calendar_events.php"),
+  getByDate: (date) => request(`api/reservations/list_by_date.php?date=${date}`),
+  getCalendarEvents: () => request("api/reservations/calendar_events.php"),
 
-  getMyReservations: (userId) => request(`get_my_reservations.php?user_id=${userId}`),
-  create: (data) => request("create_reservation.php", "POST", data),
-  update: (data) => request("update_reservation.php", "POST", data),
-  cancel: (id) => request("delete_reservation.php", "POST", { id }),
+  getMyReservations: (userId) => request(`api/reservations/list_my.php?user_id=${userId}`),
+  create: (data) => request("api/reservations/create.php", "POST", data),
+  update: (data) => request("api/reservations/update.php", "POST", data),
+  cancel: (id) => request("api/reservations/delete.php", "POST", { id }), // delete.php trata do cancelamento
 };
 
 export const userService = {
-  getAll: () => request("get_users.php"),
-  create: (data) => request("create_user.php", "POST", data),
-  toggleStatus: (id, is_active) => request("update_user_status.php", "POST", { id, is_active }),
-  changeRole: (id, role) => request("update_user_role.php", "POST", { id, role }),
-  updateProfile: (data) => request("update_profile.php", "POST", data),
+  getAll: () => request("api/users/list.php"),
+  create: (data) => request("api/users/create.php", "POST", data),
+  toggleStatus: (id, is_active) => request("api/users/update_status.php", "POST", { id, is_active }),
+  changeRole: (id, role) => request("api/users/update_role.php", "POST", { id, role }),
+  updateProfile: (data) => request("api/auth/update_profile.php", "POST", data),
 };
 
 export const dashboardService = {
-  getStats: (userId) => request(`get_dashboard_stats.php?user_id=${userId}`),
+  getStats: (userId) => request(`api/reports/dashboard_stats.php?user_id=${userId}`),
 };
 
 export const reportService = {
-  getAll: () => request("get_reports.php"),
-  create: (data) => request("create_report.php", "POST", data),
-  updateStatus: (id, status) => request("update_report_status.php", "POST", { id, status }),
+  getAll: () => request("api/reports/list.php"),
+  create: (data) => request("api/reports/create.php", "POST", data),
+  updateStatus: (id, status) => request("api/reports/update_status.php", "POST", { id, status }),
 };
