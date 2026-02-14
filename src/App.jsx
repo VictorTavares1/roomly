@@ -10,6 +10,7 @@ import Rooms from './pages/Rooms';
 import MyReservations from './pages/MyReservations';
 import NewReservation from './pages/NewReservation';
 import Settings from './pages/Settings';
+import MyReports from './pages/MyReports';
 
 // Páginas de Admin
 import CreateRoom from './pages/CreateRoom';
@@ -49,6 +50,7 @@ export default function App() {
 
       {/* --- (REPORTAR PROBLEMAS) --- */}
       <Route path="/report-issue" element={<PrivateRoute><ReportIssue /></PrivateRoute>} />
+      <Route path="/my-reports" element={<PrivateRoute><MyReports /></PrivateRoute>} />
       <Route path="/manage-reports" element={<PrivateRoute><ManageReports /></PrivateRoute>} />
 
       {/* Rotas de Admin */}

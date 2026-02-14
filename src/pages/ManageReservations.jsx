@@ -4,6 +4,7 @@ import Layout from "../components/Layout"; // <--- NOVO
 import SearchBar from "../components/SearchBar";
 import Button from "../components/Button";
 import { reservationService } from "../services/api";
+import { translateMessage } from "../utils/translations";
 
 export default function ManageReservations() {
     const [reservations, setReservations] = useState([]);
@@ -27,7 +28,7 @@ export default function ManageReservations() {
             if (res.status === "sucesso") {
                 setReservations((prev) => prev.filter((r) => r.id !== id));
             } else {
-                alert("Erro: " + res.mensagem);
+                alert("Erro: " + translateMessage(res.mensagem));
             }
         } catch (error) { console.error("Erro:", error); }
     };

@@ -6,6 +6,7 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import { roomService, reservationService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { translateMessage } from "../utils/translations";
 
 export default function EditReservation() {
     const { user } = useAuth();
@@ -71,11 +72,11 @@ export default function EditReservation() {
                 alert("Reserva atualizada com sucesso! 🎉");
                 navigate("/my-reservations");
             } else {
-                setError(res.mensagem || "Erro ao atualizar reserva.");
+                setError(translateMessage(res.mensagem) || "Erro ao atualizar reserva.");
             }
         } catch (err) {
             console.error("Erro:", err);
-            setError("Erro ao atualizar reserva. Verifica se a sala não está ocupada nesse horário.");
+            setError(translateMessage(err.message) || "Erro ao atualizar reserva. Verifica se a sala não está ocupada nesse horário.");
         } finally {
             setLoading(false);
         }

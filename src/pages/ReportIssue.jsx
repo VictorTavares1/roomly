@@ -6,6 +6,7 @@ import Button from "../components/Button";
 import { roomService, reportService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { translateMessage } from "../utils/translations";
 
 export default function ReportIssue() {
     const { user } = useAuth();
@@ -35,7 +36,7 @@ export default function ReportIssue() {
                 alert("Report enviado! A equipa técnica foi notificada. 🛠️");
                 navigate("/my-reports");
             } else {
-                alert("Erro ao enviar report.");
+                alert(translateMessage(res.mensagem || "Erro ao enviar report."));
             }
         } catch (error) { console.error(error); }
         finally { setLoading(false); }

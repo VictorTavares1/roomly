@@ -5,6 +5,7 @@ import Layout from "../components/Layout"; // <--- NOVO
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { roomService } from "../services/api";
+import { translateMessage } from "../utils/translations";
 
 export default function CreateRoom() {
     const [name, setName] = useState("");
@@ -25,7 +26,7 @@ export default function CreateRoom() {
                 alert("Sala criada com sucesso! 🏢");
                 navigate('/rooms');
             } else {
-                alert("Erro: " + res.mensagem);
+                alert("Erro: " + translateMessage(res.mensagem));
             }
         } catch (error) { console.error("Erro:", error); }
     };

@@ -16,8 +16,8 @@ export default function Profile() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (passwords.new_password !== passwords.confirm_password) return alert("A nova senha e a confirmação não coincidem!");
-        if (passwords.new_password.length < 5) return alert("A nova senha deve ter pelo menos 5 caracteres.");
+        if (passwords.new_password !== passwords.confirm_password) return alert("A nova palavra-passe e a confirmação não coincidem!");
+        if (passwords.new_password.length < 5) return alert("A nova palavra-passe deve ter pelo menos 5 caracteres.");
 
         try {
             const res = await authService.updatePassword({
@@ -27,7 +27,7 @@ export default function Profile() {
             });
 
             if (res.status === "sucesso") {
-                alert("Sucesso! Usa a nova senha na próxima vez.");
+                alert("Sucesso! Usa a nova palavra-passe na próxima vez.");
                 setPasswords({ old_password: "", new_password: "", confirm_password: "" });
             } else {
                 alert("Erro: " + res.mensagem);
@@ -49,16 +49,16 @@ export default function Profile() {
 
                     <hr className="mb-6 border-gray-100" />
                     <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                        <Lock size={18} /> Alterar Senha
+                        <Lock size={18} /> Alterar Palavra-passe
                     </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <Input label="Senha Atual" type="password" value={passwords.old_password} onChange={(val) => handleChange("old_password", val)} required />
-                        <Input label="Nova Senha" type="password" value={passwords.new_password} onChange={(val) => handleChange("new_password", val)} required />
-                        <Input label="Confirmar Nova Senha" type="password" value={passwords.confirm_password} onChange={(val) => handleChange("confirm_password", val)} required />
+                        <Input label="Palavra-passe Atual" type="password" value={passwords.old_password} onChange={(val) => handleChange("old_password", val)} required />
+                        <Input label="Nova Palavra-passe" type="password" value={passwords.new_password} onChange={(val) => handleChange("new_password", val)} required />
+                        <Input label="Confirmar Nova Palavra-passe" type="password" value={passwords.confirm_password} onChange={(val) => handleChange("confirm_password", val)} required />
 
                         <Button type="submit" variant="primary" className="w-full mt-4">
-                            <Save size={20} /> Atualizar Senha
+                            <Save size={20} /> Atualizar Palavra-passe
                         </Button>
                     </form>
                 </div>

@@ -6,6 +6,7 @@ import Input from "../components/Input";
 import Select from "../components/Select";
 import { userService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { translateMessage } from "../utils/translations";
 
 export default function ManageUsers() {
     const { user: currentUser } = useAuth();
@@ -33,7 +34,7 @@ export default function ManageUsers() {
                 setFormData({ name: "", email: "", password: "", role: "professor" });
                 carregarUsers();
             } else {
-                alert("Erro: " + res.mensagem);
+                alert("Erro: " + translateMessage(res.mensagem));
             }
         } catch (error) { console.error(error); }
     };
@@ -70,7 +71,7 @@ export default function ManageUsers() {
                     <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input label="Nome" value={formData.name} onChange={(v) => setFormData({ ...formData, name: v })} required />
                         <Input label="Email" type="email" value={formData.email} onChange={(v) => setFormData({ ...formData, email: v })} required />
-                        <Input label="Senha" type="password" value={formData.password} onChange={(v) => setFormData({ ...formData, password: v })} required />
+                        <Input label="Palavra-passe" type="password" value={formData.password} onChange={(v) => setFormData({ ...formData, password: v })} required />
                         <Select label="Cargo" value={formData.role} onChange={(v) => setFormData({ ...formData, role: v })}
                             options={[{ id: 'professor', name: 'Professor' }, { id: 'funcionario', name: 'Funcionário' }, { id: 'admin', name: 'Admin' }]}
                         />

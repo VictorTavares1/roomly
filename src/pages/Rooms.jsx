@@ -7,6 +7,7 @@ import SearchBar from "../components/SearchBar";
 import Button from "../components/Button";
 import { roomService } from "../services/api";
 import { useAuth } from "../context/AuthContext"; // <--- IMPORTAR CONTEXTO
+import { translateMessage } from "../utils/translations";
 
 export default function Rooms() {
     const { user } = useAuth(); // <--- JÁ TEMOS O USER AQUI (SEM localStorage)
@@ -29,7 +30,7 @@ export default function Rooms() {
             if (res.status === "sucesso") {
                 setRooms((prev) => prev.filter((sala) => sala.id !== id));
             } else {
-                alert("Erro: " + res.mensagem);
+                alert("Erro: " + translateMessage(res.mensagem));
             }
         } catch (erro) {
             console.error("Erro:", erro);

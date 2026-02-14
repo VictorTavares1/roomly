@@ -6,6 +6,7 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import { roomService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { translateMessage } from "../utils/translations";
 
 export default function EditRoom() {
     const { user } = useAuth();
@@ -50,7 +51,7 @@ export default function EditRoom() {
                 alert("Sala atualizada com sucesso! 🏢");
                 navigate("/rooms");
             } else {
-                setError(res.mensagem || "Erro ao atualizar sala.");
+                setError(translateMessage(res.mensagem) || "Erro ao atualizar sala.");
             }
         } catch (err) {
             console.error("Erro:", err);

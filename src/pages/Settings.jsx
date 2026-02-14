@@ -5,6 +5,7 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import { userService, authService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { translateMessage } from "../utils/translations";
 
 export default function Settings() {
     const { user, updateUser } = useAuth();
@@ -49,7 +50,7 @@ export default function Settings() {
                     updateUser(res.user);
                 }
             } else {
-                setMessage({ type: "error", text: res.mensagem });
+                setMessage({ type: "error", text: translateMessage(res.mensagem) });
             }
         } catch (error) {
             console.error(error);
@@ -65,7 +66,7 @@ export default function Settings() {
         setMessage(null);
 
         if (newPassword !== confirmPassword) {
-            setMessage({ type: "error", text: "As novas senhas não coincidem!" });
+            setMessage({ type: "error", text: "As novas palavras-passe não coincidem!" });
             setLoading(false);
             return;
         }
@@ -78,15 +79,15 @@ export default function Settings() {
             });
 
             if (res.status === "sucesso") {
-                setMessage({ type: "success", text: "Senha alterada! Por favor entra novamente." });
+                setMessage({ type: "success", text: "Palavra-passe alterada! Por favor entra novamente." });
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
-                setMessage({ type: "error", text: res.mensagem });
+                setMessage({ type: "error", text: translateMessage(res.mensagem) });
             }
         } catch (error) {
-            setMessage({ type: "error", text: "Erro ao mudar senha." });
+            setMessage({ type: "error", text: "Erro ao mudar palavra-passe." });
         } finally {
             setLoading(false);
         }
@@ -158,16 +159,16 @@ export default function Settings() {
                     {/* ABA SEGURANÇA */}
                     {activeTab === "security" && (
                         <div className="animate-fadeIn">
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">Alterar Senha</h2>
-                            <p className="text-gray-500 mb-8 text-sm">Escolhe uma senha forte.</p>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">Alterar Palavra-passe</h2>
+                            <p className="text-gray-500 mb-8 text-sm">Escolhe uma palavra-passe forte.</p>
 
                             <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-lg">
-                                <Input label="Senha Atual" type="password" value={currentPassword} onChange={setCurrentPassword} icon={Lock} required />
+                                <Input label="Palavra-passe Atual" type="password" value={currentPassword} onChange={setCurrentPassword} icon={Lock} required />
                                 <hr className="border-gray-100" />
-                                <Input label="Nova Senha" type="password" value={newPassword} onChange={setNewPassword} icon={Shield} required />
-                                <Input label="Confirmar Nova Senha" type="password" value={confirmPassword} onChange={setConfirmPassword} icon={Shield} required />
+                                <Input label="Nova Palavra-passe" type="password" value={newPassword} onChange={setNewPassword} icon={Shield} required />
+                                <Input label="Confirmar Nova Palavra-passe" type="password" value={confirmPassword} onChange={setConfirmPassword} icon={Shield} required />
                                 <Button type="submit" variant="primary" isLoading={loading} className="mt-4 w-full">
-                                    Atualizar Senha
+                                    Atualizar Palavra-passe
                                 </Button>
                             </form>
                         </div>

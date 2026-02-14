@@ -7,6 +7,7 @@ import Button from "../components/Button";
 import Scheduler from "../components/Scheduler";
 import { roomService, reservationService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { translateMessage } from "../utils/translations";
 
 export default function NewReservation() {
     const { user } = useAuth();
@@ -63,7 +64,7 @@ export default function NewReservation() {
             navigate("/my-reservations");
         } catch (err) {
             console.error(err);
-            setError("Erro ao criar reserva. Verifica se a sala já não está ocupada nesse horário.");
+            setError(translateMessage(err.message) || "Erro ao criar reserva. Verifica se a sala já não está ocupada nesse horário.");
         } finally {
             setLoading(false);
         }

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, ArrowRight, Loader, ArrowLeft } from "lucide-react";
 import Logo from "../components/Logo"; // <--- Importação do Logo
+import { translateMessage } from "../utils/translations";
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,7 +23,7 @@ export default function Login() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError("Email ou senha incorretos.");
+      setError(translateMessage(err.message || "Email ou palavra-passe incorretos."));
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ export default function Login() {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-white/40">
-            Esqueceste-te da senha? <span className="text-blue-300 hover:text-white cursor-pointer transition-colors">Contacta a secretaria.</span>
+            Esqueceste-te da palavra-passe? <span className="text-blue-300 hover:text-white cursor-pointer transition-colors">Contacta a secretaria.</span>
           </p>
         </div>
       </div>
