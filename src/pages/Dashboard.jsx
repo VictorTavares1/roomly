@@ -1,27 +1,93 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Users, Calendar, MapPin, TrendingUp, CheckCircle, ShieldAlert } from "lucide-react";
+import { Users, Calendar, TrendingUp, CheckCircle, ShieldAlert, Clock, Activity, History } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Layout from "../components/Layout";
 import { dashboardService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
+// Função para calcular "Há quanto tempo"
+function timeAgo(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " anos atrás";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " meses atrás";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " dias atrás";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " horas atrás";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " min atrás";
+    return "Agora mesmo";
+}
+
+const RecentActivity = ({ activities }) => (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <Clock className="text-blue-600" size={20} /> Atividade Recente
+        </h2>
+        <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {activities && activities.length > 0 ? (
+                activities.map((act, index) => (
+                    <div key={index} className="flex gap-4 items-start pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div className={`mt-1 p-2 rounded-full shrink-0 ${act.type === 'reserva' ? 'bg-green-100 text-green-600' :
+                                act.type === 'cancelamento' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                            }`}>
+                            <Activity size={14} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-800 font-medium leading-snug">
+                                {/* Aqui mostramos o nome que vem do PHP (User real ou "Eu") */}
+                                <span className="font-bold text-blue-600">{act.user}</span> {act.action} <span className="font-bold">{act.target}</span>
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">{act.time}</p>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                    Sem atividade recente.
+                </div>
+            )}
+        </div>
+    </div>
+);
+
 export default function Dashboard() {
     const { user } = useAuth();
     const location = useLocation();
     const wasUnauthorized = location.state?.unauthorized;
+
     const [stats, setStats] = useState({
         rooms: 0,
         reservations_today: 0,
+        total_reservations: 0,
         users: 0,
-        chart_data: []
+        chart_data: [],
+        recent_activities: []
     });
 
     useEffect(() => {
         if (user?.id) {
             dashboardService.getStats(user.id)
                 .then((data) => {
-                    if (!data.error) setStats(data);
+                    if (!data.error) {
+                        // Processar as datas
+                        const processedActivities = (data.recent_activities || []).map(act => ({
+                            ...act,
+                            time: timeAgo(act.time)
+                        }));
+
+                        setStats({
+                            ...data,
+                            recent_activities: processedActivities
+                        });
+                    }
                 })
                 .catch((err) => console.error("Erro:", err));
         }
@@ -29,7 +95,7 @@ export default function Dashboard() {
 
     const StatCard = ({ icon: Icon, label, value, color }) => (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`p-4 rounded-full ${color} text-white shadow-lg`}>
+            <div className={`p-4 rounded-full ${color} text-white shadow-lg shadow-opacity-20`}>
                 <Icon size={24} />
             </div>
             <div>
@@ -42,54 +108,60 @@ export default function Dashboard() {
     return (
         <Layout>
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Olá, {user?.name || 'Visitante'}! 👋</h1>
-                <p className="text-gray-500 mt-1">Aqui está o resumo da tua atividade.</p>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">Olá, {user?.name || 'Visitante'}! 👋</h1>
+                        <p className="text-gray-500 mt-1">Aqui está o resumo da atividade.</p>
+                    </div>
+                    <div className="text-sm text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                        {new Date().toLocaleDateString('pt-PT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                </div>
+
                 {wasUnauthorized && (
-                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800">
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800 animate-fadeIn">
                         <ShieldAlert size={20} />
                         <span>Não tens permissão para aceder a essa página.</span>
                     </div>
                 )}
             </div>
 
-            <div className={`grid grid-cols-1 gap-6 mb-8 ${(user?.role === 'admin' || user?.role === 'funcionario') ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-                <StatCard icon={CheckCircle} label="Salas Disponíveis" value={stats.rooms} color="bg-blue-500" />
-                <StatCard icon={Calendar} label="Minhas Reservas Hoje" value={stats.reservations_today} color="bg-green-500" />
-                {(user?.role === 'admin' || user?.role === 'funcionario') && (
-                    <StatCard icon={Users} label="Utilizadores Ativos" value={stats.users} color="bg-purple-500" />
-                )}
+            {/* KPIs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <StatCard icon={CheckCircle} label="Salas Disponíveis Agora" value={stats.rooms} color="bg-blue-600" />
+                <StatCard icon={Calendar} label="Minhas Reservas Hoje" value={stats.reservations_today} color="bg-emerald-500" />
+                <StatCard icon={History} label="Total Histórico de Reservas" value={stats.total_reservations} color="bg-violet-600" />
             </div>
 
+            {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                {/* Gráfico */}
+                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col min-h-[400px]">
                     <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                        <TrendingUp className="text-blue-600" /> Top 5 Salas Mais Populares
+                        <TrendingUp className="text-blue-600" size={20} /> Top Salas Mais Populares
                     </h2>
-                    <div className="h-64 w-full">
+                    <div className="flex-1 w-full min-h-[300px]">
                         {stats.chart_data && stats.chart_data.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={stats.chart_data}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
-                                    <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                    <Bar dataKey="reservas" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={40} />
+                                <BarChart data={stats.chart_data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 500 }} dy={10} />
+                                    <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
+                                    <Bar dataKey="reservas" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={50} activeBar={{ fill: '#2563eb' }} />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-full flex items-center justify-center text-gray-400">Sem dados para mostrar.</div>
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+                                <BarChart size={48} className="opacity-20" />
+                                <p>Ainda não há dados suficientes.</p>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                <div className="bg-blue-900 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-between relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h3 className="text-xl font-bold mb-2">Dica Pro 🚀</h3>
-                        <p className="text-blue-100 text-sm leading-relaxed mb-4">
-                            Usa a pesquisa na aba "Gerir Reservas" para encontrar rapidamente quem reservou o quê.
-                        </p>
-                    </div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full blur-3xl opacity-20 -ml-10 -mb-10"></div>
+                {/* Atividade Recente */}
+                <div className="lg:col-span-1 min-h-[400px]">
+                    <RecentActivity activities={stats.recent_activities} />
                 </div>
             </div>
         </Layout>
