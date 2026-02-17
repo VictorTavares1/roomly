@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, MapPin, AlignLeft, CheckCircle } from "lucide-react";
-import Layout from "../components/Layout"; // <--- NOVO
+import toast from "react-hot-toast";
+import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Scheduler from "../components/Scheduler";
@@ -60,7 +61,7 @@ export default function NewReservation() {
                 purpose
             });
 
-            alert("Reserva criada com sucesso! 🎉");
+            toast.success("Reserva criada com sucesso! 🎉");
             navigate("/my-reservations");
         } catch (err) {
             console.error(err);
@@ -72,25 +73,25 @@ export default function NewReservation() {
 
     return (
         <Layout>
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Nova Reserva 📅</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8">Nova Reserva 📅</h1>
 
             <div className="flex flex-col xl:flex-row gap-8">
 
                 {/* COLUNA DA ESQUERDA: O Formulário */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 w-full xl:w-1/3 h-fit">
-                    <h2 className="text-xl font-bold text-gray-700 mb-6">Detalhes</h2>
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 w-full xl:w-1/3 h-fit transition-colors">
+                    <h2 className="text-xl font-bold text-gray-700 dark:text-slate-300 mb-6">Detalhes</h2>
 
                     {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Escolher Sala</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Escolher Sala</label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <MapPin className="absolute left-3 top-3 text-gray-400 dark:text-slate-500" size={20} />
                                 <select
                                     value={roomId}
                                     onChange={(e) => setRoomId(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-slate-700 dark:text-slate-200"
                                 >
                                     {rooms.map(room => (
                                         <option key={room.id} value={room.id}>
@@ -118,7 +119,7 @@ export default function NewReservation() {
 
                 {/* COLUNA DA DIREITA: O CALENDÁRIO (sincronizado com sala e data) */}
                 <div className="w-full xl:w-2/3">
-                    <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
                         <Scheduler roomId={roomId || null} date={date || null} />
                     </div>
                 </div>

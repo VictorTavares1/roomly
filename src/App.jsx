@@ -17,11 +17,14 @@ import CreateRoom from './pages/CreateRoom';
 import ManageUsers from './pages/ManageUsers';
 import ManageReservations from './pages/ManageReservations';
 
-// Páginas de manuntenção
+// Páginas de manutenção
 import ReportIssue from './pages/ReportIssue';
 import ManageReports from './pages/ManageReports';
 
-// Componente para proteger rotas
+// Proteção de rotas
+import AdminRoute from './components/AdminRoute';
+import StaffRoute from './components/StaffRoute';
+
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -48,15 +51,17 @@ export default function App() {
       <Route path="/new-reservation" element={<PrivateRoute><NewReservation /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
-      {/* --- (REPORTAR PROBLEMAS) --- */}
+      {/* Reportar Problemas (qualquer user logado) */}
       <Route path="/report-issue" element={<PrivateRoute><ReportIssue /></PrivateRoute>} />
       <Route path="/my-reports" element={<PrivateRoute><MyReports /></PrivateRoute>} />
-      <Route path="/manage-reports" element={<PrivateRoute><ManageReports /></PrivateRoute>} />
 
-      {/* Rotas de Admin */}
-      <Route path="/create-room" element={<PrivateRoute><CreateRoom /></PrivateRoute>} />
-      <Route path="/manage-users" element={<PrivateRoute><ManageUsers /></PrivateRoute>} />
-      <Route path="/manage-reservations" element={<PrivateRoute><ManageReservations /></PrivateRoute>} />
+      {/* Manutenção (admin + funcionário) */}
+      <Route path="/manage-reports" element={<StaffRoute><ManageReports /></StaffRoute>} />
+
+      {/* Rotas de Admin (só admin) */}
+      <Route path="/create-room" element={<AdminRoute><CreateRoom /></AdminRoute>} />
+      <Route path="/manage-users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
+      <Route path="/manage-reservations" element={<AdminRoute><ManageReservations /></AdminRoute>} />
 
       {/* Qualquer outra rota vai para a Landing Page */}
       <Route path="*" element={<Navigate to="/" />} />

@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4: ativar dark mode via classe */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* --- CONFIGURAÇÃO DA FONTE (TAILWIND V4) --- */
 @theme {
-    /* Isto faz com que todas as classes font-sans usem Poppins automaticamente */
     --font-sans: "Poppins", sans-serif;
 }
 
@@ -10,13 +12,21 @@
 body {
     font-family: "Poppins", sans-serif;
     background-color: #f3f4f6;
-    /* Cinza base */
-    /* O Gradiente subtil de fundo */
     background-image: radial-gradient(circle at 10% 20%,
             rgb(239, 246, 255) 0%,
             rgb(243, 244, 246) 90%);
     color: #1e293b;
-    /* Slate-800 para texto base */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode body */
+.dark body,
+body:where(.dark *) {
+    background-color: #0f172a;
+    background-image: radial-gradient(circle at 10% 20%,
+            rgb(15, 23, 42) 0%,
+            rgb(2, 6, 23) 90%);
+    color: #e2e8f0;
 }
 
 /* --- ANIMAÇÕES (Fade In suave) --- */
@@ -48,11 +58,18 @@ body {
 
 ::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    /* Cor da barra */
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
-    /* Cor ao passar o rato */
+}
+
+/* Dark scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, ArrowRight, Loader, ArrowLeft } from "lucide-react";
-import Logo from "../components/Logo"; // <--- Importação do Logo
+import Logo from "../components/Logo";
 import { translateMessage } from "../utils/translations";
 
 export default function Login() {
@@ -111,7 +111,7 @@ export default function Login() {
       </div>
 
       <div className="absolute bottom-4 text-xs text-white/20">
-        © 2024 Roomly Education
+        © 2026 Roomly Education
       </div>
     </div>
   );

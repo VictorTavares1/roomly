@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { authService } from "../services/api"; // <--- IMPORTANTE: Importar o serviço
+import { authService } from "../services/api";
 
 const AuthContext = createContext({});
 
@@ -23,7 +23,6 @@ export function AuthProvider({ children }) {
         setLoading(false);
     }, []);
 
-    // AQUI ESTAVA O PROBLEMA: Agora a função faz o pedido à API!
     const login = async (email, password) => {
         try {
             // 1. Pede à API para verificar o login
@@ -46,7 +45,7 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setLoading(true);
         setUser(null);
-        localStorage.removeItem("roomly_user"); // Remove a chave certa
+        localStorage.removeItem("roomly_user");
 
         setTimeout(() => {
             window.location.href = "/login";

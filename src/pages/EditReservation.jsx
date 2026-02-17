@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Calendar, Clock, MapPin, AlignLeft, Save, ArrowLeft } from "lucide-react";
+import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
@@ -69,7 +70,7 @@ export default function EditReservation() {
             });
 
             if (res.status === "sucesso") {
-                alert("Reserva atualizada com sucesso! 🎉");
+                toast.success("Reserva atualizada com sucesso! 🎉");
                 navigate("/my-reservations");
             } else {
                 setError(translateMessage(res.mensagem) || "Erro ao atualizar reserva.");
@@ -95,23 +96,23 @@ export default function EditReservation() {
                 </button>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Editar Reserva ✏️</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8">Editar Reserva ✏️</h1>
 
             <div className="max-w-xl">
-                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 transition-colors">
                     {error && (
                         <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Sala</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">Sala</label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-3.5 text-gray-400" size={20} />
+                                <MapPin className="absolute left-3 top-3.5 text-gray-400 dark:text-slate-500" size={20} />
                                 <select
                                     value={roomId}
                                     onChange={(e) => setRoomId(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none font-medium text-slate-700 shadow-sm"
+                                    className="w-full pl-10 pr-4 py-3.5 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none font-medium text-slate-700 dark:text-slate-200 shadow-sm"
                                     required
                                 >
                                     {rooms.map((r) => (

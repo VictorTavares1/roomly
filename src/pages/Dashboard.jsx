@@ -6,7 +6,6 @@ import Layout from "../components/Layout";
 import { dashboardService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
-// Função para calcular "Há quanto tempo"
 function timeAgo(dateString) {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -27,30 +26,29 @@ function timeAgo(dateString) {
 }
 
 const RecentActivity = ({ activities }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col transition-colors">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200 mb-6 flex items-center gap-2">
             <Clock className="text-blue-600" size={20} /> Atividade Recente
         </h2>
         <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {activities && activities.length > 0 ? (
                 activities.map((act, index) => (
-                    <div key={index} className="flex gap-4 items-start pb-4 border-b border-gray-50 last:border-0 last:pb-0">
-                        <div className={`mt-1 p-2 rounded-full shrink-0 ${act.type === 'reserva' ? 'bg-green-100 text-green-600' :
-                                act.type === 'cancelamento' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                    <div key={index} className="flex gap-4 items-start pb-4 border-b border-gray-50 dark:border-slate-700 last:border-0 last:pb-0">
+                        <div className={`mt-1 p-2 rounded-full shrink-0 ${act.type === 'reserva' ? 'bg-green-100 dark:bg-green-900/40 text-green-600' :
+                            act.type === 'cancelamento' ? 'bg-red-100 dark:bg-red-900/40 text-red-600' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600'
                             }`}>
                             <Activity size={14} />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-800 font-medium leading-snug">
-                                {/* Aqui mostramos o nome que vem do PHP (User real ou "Eu") */}
+                            <p className="text-sm text-gray-800 dark:text-slate-300 font-medium leading-snug">
                                 <span className="font-bold text-blue-600">{act.user}</span> {act.action} <span className="font-bold">{act.target}</span>
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">{act.time}</p>
+                            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{act.time}</p>
                         </div>
                     </div>
                 ))
             ) : (
-                <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-full flex items-center justify-center text-gray-400 dark:text-slate-500 text-sm">
                     Sem atividade recente.
                 </div>
             )}
@@ -77,7 +75,6 @@ export default function Dashboard() {
             dashboardService.getStats(user.id)
                 .then((data) => {
                     if (!data.error) {
-                        // Processar as datas
                         const processedActivities = (data.recent_activities || []).map(act => ({
                             ...act,
                             time: timeAgo(act.time)
@@ -94,13 +91,13 @@ export default function Dashboard() {
     }, [user]);
 
     const StatCard = ({ icon: Icon, label, value, color }) => (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center gap-4 hover:shadow-md transition-all">
             <div className={`p-4 rounded-full ${color} text-white shadow-lg shadow-opacity-20`}>
                 <Icon size={24} />
             </div>
             <div>
-                <p className="text-gray-500 text-sm font-medium">{label}</p>
-                <h3 className="text-2xl font-bold text-gray-800">{value || 0}</h3>
+                <p className="text-gray-500 dark:text-slate-400 text-sm font-medium">{label}</p>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-200">{value || 0}</h3>
             </div>
         </div>
     );
@@ -110,16 +107,16 @@ export default function Dashboard() {
             <div className="mb-8">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Olá, {user?.name || 'Visitante'}! 👋</h1>
-                        <p className="text-gray-500 mt-1">Aqui está o resumo da atividade.</p>
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200">Olá, {user?.name || 'Visitante'}! 👋</h1>
+                        <p className="text-gray-500 dark:text-slate-400 mt-1">Aqui está o resumo da atividade.</p>
                     </div>
-                    <div className="text-sm text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                    <div className="text-sm text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800 px-3 py-1 rounded-lg border border-gray-100 dark:border-slate-700">
                         {new Date().toLocaleDateString('pt-PT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                 </div>
 
                 {wasUnauthorized && (
-                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800 animate-fadeIn">
+                    <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl flex items-center gap-3 text-amber-800 dark:text-amber-300 animate-fadeIn">
                         <ShieldAlert size={20} />
                         <span>Não tens permissão para aceder a essa página.</span>
                     </div>
@@ -136,22 +133,22 @@ export default function Dashboard() {
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Gráfico */}
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col min-h-[400px]">
-                    <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col min-h-[400px] transition-colors">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200 mb-6 flex items-center gap-2">
                         <TrendingUp className="text-blue-600" size={20} /> Top Salas Mais Populares
                     </h2>
                     <div className="flex-1 w-full min-h-[300px]">
                         {stats.chart_data && stats.chart_data.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={stats.chart_data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-gray-200 dark:text-slate-700" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 500 }} dy={10} />
-                                    <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
+                                    <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
                                     <Bar dataKey="reservas" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={50} activeBar={{ fill: '#2563eb' }} />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-slate-500 gap-2">
                                 <BarChart size={48} className="opacity-20" />
                                 <p>Ainda não há dados suficientes.</p>
                             </div>

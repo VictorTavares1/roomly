@@ -10,24 +10,27 @@ import {
     BookOpen,
     AlertTriangle,
     Wrench,
-    ClipboardList
+    ClipboardList,
+    Moon,
+    Sun
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import Logo from "./Logo"; // <--- Importação do Logo
+import { useTheme } from "../context/ThemeContext";
+import Logo from "./Logo";
 
 export default function Sidebar() {
     const location = useLocation();
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
-    // Função auxiliar para saber qual link está ativo
     const isActive = (path) => location.pathname === path
         ? "bg-white/10 text-white shadow-lg"
         : "text-blue-100 hover:bg-white/5 hover:text-white";
 
     return (
-        <aside className="w-64 bg-blue-900 text-white h-full flex flex-col transition-all duration-300">
+        <aside className="w-64 bg-blue-900 dark:bg-slate-950 text-white h-full flex flex-col transition-colors duration-300">
 
-            {/* LOGO NOVO */}
+            {/* LOGO */}
             <div className="flex items-center gap-3 mb-10 px-4 pt-6">
                 <div className="bg-white/10 p-1 rounded-xl">
                     <Logo className="w-10 h-10" />
@@ -90,7 +93,23 @@ export default function Sidebar() {
             </nav>
 
             {/* RODAPÉ */}
-            <div className="mt-auto border-t border-blue-800 p-4 space-y-2">
+            <div className="mt-auto border-t border-blue-800 dark:border-slate-800 p-4 space-y-2">
+                {/* TOGGLE DARK MODE */}
+                <button
+                    onClick={toggleTheme}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-blue-200 hover:bg-white/5 hover:text-white transition-all font-medium group"
+                >
+                    {theme === "dark" ? (
+                        <>
+                            <Sun size={20} className="group-hover:rotate-45 transition-transform" /> Modo Claro
+                        </>
+                    ) : (
+                        <>
+                            <Moon size={20} className="group-hover:-rotate-12 transition-transform" /> Modo Escuro
+                        </>
+                    )}
+                </button>
+
                 <Link to="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/settings')}`}>
                     <Settings size={20} /> Definições
                 </Link>

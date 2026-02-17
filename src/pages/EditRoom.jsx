@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Type, Users, Projector, Save, ArrowLeft } from "lucide-react";
+import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
@@ -48,7 +49,7 @@ export default function EditRoom() {
             });
 
             if (res.status === "sucesso") {
-                alert("Sala atualizada com sucesso! 🏢");
+                toast.success("Sala atualizada com sucesso! 🏢");
                 navigate("/rooms");
             } else {
                 setError(translateMessage(res.mensagem) || "Erro ao atualizar sala.");
@@ -74,10 +75,10 @@ export default function EditRoom() {
                 </button>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Editar Sala ✏️</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8">Editar Sala ✏️</h1>
 
             <div className="flex justify-center items-center min-h-[50vh]">
-                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 w-full max-w-lg transition-colors">
                     {error && (
                         <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>
                     )}
@@ -86,11 +87,11 @@ export default function EditRoom() {
                         <Input label="Nome da Sala" placeholder="Ex: Laboratório de Química" value={name} onChange={setName} icon={Type} required />
                         <Input label="Lotação Máxima" type="number" placeholder="Ex: 30" value={capacity} onChange={setCapacity} icon={Users} required />
 
-                        <div className="flex items-center gap-3 p-4 border rounded-xl bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => setHasProjector(!hasProjector)}>
+                        <div className="flex items-center gap-3 p-4 border dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors" onClick={() => setHasProjector(!hasProjector)}>
                             <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${hasProjector ? "bg-blue-600 border-blue-600" : "border-gray-300 bg-white"}`}>
                                 {hasProjector && <Projector size={14} className="text-white" />}
                             </div>
-                            <span className="font-medium text-slate-700 select-none">Tem Projetor Disponível?</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300 select-none">Tem Projetor Disponível?</span>
                         </div>
 
                         <div className="flex gap-3">

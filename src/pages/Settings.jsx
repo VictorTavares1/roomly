@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Lock, Shield, Save, CheckCircle, AlertTriangle } from "lucide-react";
-import Layout from "../components/Layout"; // <--- NOVO
+import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { userService, authService } from "../services/api";
@@ -95,7 +95,7 @@ export default function Settings() {
 
     return (
         <Layout>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Definições </h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-6">Definições </h1>
 
             <div className="flex flex-col lg:flex-row gap-8">
 
@@ -104,21 +104,21 @@ export default function Settings() {
                     <button
                         onClick={() => setActiveTab("profile")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
-                        ${activeTab === "profile" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:bg-white hover:text-gray-700"}`}
+                        ${activeTab === "profile" ? "bg-white dark:bg-slate-800 text-blue-600 shadow-sm border border-blue-100 dark:border-slate-600" : "text-gray-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-gray-700"}`}
                     >
                         <User size={20} /> Meu Perfil
                     </button>
                     <button
                         onClick={() => setActiveTab("security")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
-                        ${activeTab === "security" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:bg-white hover:text-gray-700"}`}
+                        ${activeTab === "security" ? "bg-white dark:bg-slate-800 text-blue-600 shadow-sm border border-blue-100 dark:border-slate-600" : "text-gray-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-gray-700"}`}
                     >
                         <Lock size={20} /> Segurança
                     </button>
                 </div>
 
                 {/* CONTEÚDO */}
-                <div className="flex-1 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 min-h-[500px]">
+                <div className="flex-1 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 min-h-[500px] transition-colors">
 
                     {/* Feedback */}
                     {message && (
@@ -131,13 +131,13 @@ export default function Settings() {
                     {/* ABA PERFIL */}
                     {activeTab === "profile" && (
                         <div className="animate-fadeIn">
-                            <div className="flex items-center gap-6 mb-8 border-b border-gray-100 pb-6">
+                            <div className="flex items-center gap-6 mb-8 border-b border-gray-100 dark:border-slate-700 pb-6">
                                 <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600 border-4 border-blue-50">
                                     {getInitials(user?.name)}
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-800">{user?.name}</h2>
-                                    <p className="text-gray-500">{user?.email}</p>
+                                    <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200">{user?.name}</h2>
+                                    <p className="text-gray-500 dark:text-slate-400">{user?.email}</p>
                                     <span className="inline-block mt-2 px-3 py-1 bg-gray-100 text-xs font-bold uppercase rounded-full text-gray-600">
                                         {user?.role}
                                     </span>
@@ -159,12 +159,12 @@ export default function Settings() {
                     {/* ABA SEGURANÇA */}
                     {activeTab === "security" && (
                         <div className="animate-fadeIn">
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">Alterar Palavra-passe</h2>
-                            <p className="text-gray-500 mb-8 text-sm">Escolhe uma palavra-passe forte.</p>
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200 mb-2">Alterar Palavra-passe</h2>
+                            <p className="text-gray-500 dark:text-slate-400 mb-8 text-sm">Escolhe uma palavra-passe forte.</p>
 
                             <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-lg">
                                 <Input label="Palavra-passe Atual" type="password" value={currentPassword} onChange={setCurrentPassword} icon={Lock} required />
-                                <hr className="border-gray-100" />
+                                <hr className="border-gray-100 dark:border-slate-700" />
                                 <Input label="Nova Palavra-passe" type="password" value={newPassword} onChange={setNewPassword} icon={Shield} required />
                                 <Input label="Confirmar Nova Palavra-passe" type="password" value={confirmPassword} onChange={setConfirmPassword} icon={Shield} required />
                                 <Button type="submit" variant="primary" isLoading={loading} className="mt-4 w-full">

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, School, ShieldCheck, Zap } from "lucide-react";
-import Logo from "../components/Logo"; // <--- Importação do Logo
+import Logo from "../components/Logo";
 
 export default function Landing() {
     return (
@@ -94,7 +94,7 @@ export default function Landing() {
             </div>
 
             <footer className="absolute bottom-0 w-full py-6 text-center z-10">
-                <p className="text-xs text-white/30">© 2024 Roomly. Feito com 💙 para a escola.</p>
+                <p className="text-xs text-white/30">© 2026 Roomly. Feito com 💙 para a escola.</p>
             </footer>
         </div>
     );

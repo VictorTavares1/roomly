@@ -1,11 +1,6 @@
-// src/services/api.js
-
-// Tenta usar 127.0.0.1 para evitar problemas de IPv6 do Windows
 const API_BASE = "http://127.0.0.1/roomly_api";
 
 async function request(endpoint, method = "GET", data = null) {
-  console.log(`🚀 A iniciar pedido para: ${API_BASE}/${endpoint}`); // LOG 1
-
   const config = {
     method: method,
     headers: {
@@ -15,35 +10,35 @@ async function request(endpoint, method = "GET", data = null) {
 
   if (data) {
     config.body = JSON.stringify(data);
-    console.log("📦 Dados enviados:", config.body); // LOG 2
   }
 
   try {
     const response = await fetch(`${API_BASE}/${endpoint}`, config);
-    console.log("📶 Status da resposta:", response.status); // LOG 3
-
-    // TRUQUE DE MESTRE: Lemos como TEXTO primeiro para ver o que vem
     const text = await response.text();
-    // console.log("📄 Resposta crua do servidor:", text); // Descomenta se precisares de muito detalhe
 
     if (!text) {
       throw new Error("O servidor respondeu vazio!");
     }
 
     try {
-      return JSON.parse(text); // Tenta converter para JSON
+      const json = JSON.parse(text);
+
+      // Se a API devolver um erro, lançamos com a mensagem para o catch apanhar
+      if (json.status === "erro") {
+        throw new Error(json.mensagem || "Erro desconhecido do servidor.");
+      }
+
+      return json;
     } catch (e) {
-      console.error("❌ O servidor não devolveu JSON! Devolveu isto:", text);
-      throw new Error("Erro ao processar resposta do servidor (não é JSON).");
+      if (e.message && !e.message.includes("JSON")) throw e;
+      throw new Error("Erro ao processar resposta do servidor.");
     }
 
   } catch (error) {
-    console.error("☠️ ERRO FATAL no fetch:", error);
     throw error;
   }
 }
 
-// ... (código inicial igual)
 
 // === SERVIÇOS ===
 

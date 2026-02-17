@@ -23,7 +23,15 @@ export const translations = {
     "Created successfully": "Criado com sucesso!",
     "Updated successfully": "Atualizado com sucesso!",
     "Deleted successfully": "Removido com sucesso!",
-    "Missing required fields": "Por favor, preenche todos os campos obrigatórios."
+    "Missing required fields": "Por favor, preenche todos os campos obrigatórios.",
+
+    // Mensagens do backend PT
+    "Conta desativada.": "Esta conta foi desativada. Contacta a administração.",
+    "Email ou palavra-passe incorretos.": "Email ou palavra-passe incorretos.",
+    "Erro interno do servidor.": "Ocorreu um erro no servidor. Tenta mais tarde.",
+    "Sala ocupada neste horário!": "Esta sala já está reservada neste horário.",
+    "Esse horário já está ocupado por outra pessoa!": "Esse horário já está ocupado por outra pessoa.",
+    "Esse email já existe!": "Este email já está registado."
 };
 
 /**

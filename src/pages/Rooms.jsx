@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { Trash2, Pencil, Projector, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import RoomCard from "../components/RoomCard";
 import SearchBar from "../components/SearchBar";
 import Button from "../components/Button";
 import { roomService } from "../services/api";
-import { useAuth } from "../context/AuthContext"; // <--- IMPORTAR CONTEXTO
+import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
 
 export default function Rooms() {
-    const { user } = useAuth(); // <--- JÁ TEMOS O USER AQUI (SEM localStorage)
+    const { user } = useAuth();
     const [rooms, setRooms] = useState([]);
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
@@ -23,18 +24,29 @@ export default function Rooms() {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Tens a certeza que queres remover esta sala?")) return;
-
-        try {
-            const res = await roomService.delete(id);
-            if (res.status === "sucesso") {
-                setRooms((prev) => prev.filter((sala) => sala.id !== id));
-            } else {
-                alert("Erro: " + translateMessage(res.mensagem));
-            }
-        } catch (erro) {
-            console.error("Erro:", erro);
-        }
+        toast((t) => (
+            <div className="flex flex-col gap-2">
+                <p className="font-medium">Tens a certeza que queres remover esta sala?</p>
+                <div className="flex gap-2">
+                    <button onClick={async () => {
+                        toast.dismiss(t.id);
+                        try {
+                            const res = await roomService.delete(id);
+                            if (res.status === "sucesso") {
+                                setRooms((prev) => prev.filter((sala) => sala.id !== id));
+                                toast.success("Sala removida com sucesso!");
+                            } else {
+                                toast.error(translateMessage(res.mensagem));
+                            }
+                        } catch (erro) {
+                            console.error("Erro:", erro);
+                            toast.error("Erro ao remover sala.");
+                        }
+                    }} className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">Remover</button>
+                    <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-300">Cancelar</button>
+                </div>
+            </div>
+        ), { duration: 10000 });
     };
 
     const filteredRooms = rooms.filter((sala) => {
@@ -45,7 +57,7 @@ export default function Rooms() {
 
     return (
         <Layout title="Salas de Aula">
-            <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <div className="flex flex-col md:flex-row gap-4 items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 mb-8 transition-colors">
                 <div className="flex-1 w-full">
                     <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Pesquisar sala por nome..." />
                 </div>
@@ -59,7 +71,6 @@ export default function Rooms() {
                 {filteredRooms.map((sala) => (
                     <div key={sala.id} className="relative group w-full max-w-sm animate-fade-in">
                         <RoomCard room={sala} />
-                        {/* Verifica se é admin usando o user do Contexto */}
                         {user?.role === 'admin' && (
                             <div className="absolute -top-2 -right-2 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="warning" onClick={() => navigate('/edit-room', { state: { room: sala } })} className="!p-2 !rounded-full !w-10 !h-10">
@@ -74,7 +85,7 @@ export default function Rooms() {
                 ))}
             </div>
             {filteredRooms.length === 0 && (
-                <div className="text-center py-12 text-gray-400">Nenhuma sala encontrada.</div>
+                <div className="text-center py-12 text-gray-400 dark:text-slate-500">Nenhuma sala encontrada.</div>
             )}
         </Layout>
     );

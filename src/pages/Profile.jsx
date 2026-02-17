@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { User, Lock, Save } from "lucide-react";
+import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { authService } from "../services/api";
-import { useAuth } from "../context/AuthContext"; // <--- USAR CONTEXT
+import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
-    const { user } = useAuth(); // <--- USER DO CONTEXTO
+    const { user } = useAuth();
     const [passwords, setPasswords] = useState({ old_password: "", new_password: "", confirm_password: "" });
 
     const handleChange = (name, value) => {
@@ -16,39 +17,48 @@ export default function Profile() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (passwords.new_password !== passwords.confirm_password) return alert("A nova palavra-passe e a confirmação não coincidem!");
-        if (passwords.new_password.length < 5) return alert("A nova palavra-passe deve ter pelo menos 5 caracteres.");
+        if (passwords.new_password !== passwords.confirm_password) {
+            toast.error("A nova palavra-passe e a confirmação não coincidem!");
+            return;
+        }
+        if (passwords.new_password.length < 5) {
+            toast.error("A nova palavra-passe deve ter pelo menos 5 caracteres.");
+            return;
+        }
 
         try {
             const res = await authService.updatePassword({
-                id: user.id, // <--- USA O ID DO CONTEXTO
+                id: user.id,
                 old_password: passwords.old_password,
                 new_password: passwords.new_password
             });
 
             if (res.status === "sucesso") {
-                alert("Sucesso! Usa a nova palavra-passe na próxima vez.");
+                toast.success("Palavra-passe atualizada com sucesso!");
                 setPasswords({ old_password: "", new_password: "", confirm_password: "" });
             } else {
-                alert("Erro: " + res.mensagem);
+                toast.error(res.mensagem || "Erro ao atualizar palavra-passe.");
             }
-        } catch (error) { console.error("Erro:", error); }
+        } catch (error) {
+            console.error("Erro:", error);
+            toast.error("Erro ao atualizar palavra-passe.");
+        }
     };
 
     return (
         <Layout title="Meu Perfil">
             <div className="flex justify-center">
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 w-full max-w-lg">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 w-full max-w-lg transition-colors">
                     <div className="text-center mb-8">
                         <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
                             <User size={40} />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-800">{user?.name}</h1>
-                        <p className="text-gray-500 capitalize">{user?.role}</p>
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-200">{user?.name}</h1>
+                        <p className="text-gray-500 dark:text-slate-400 capitalize">{user?.role}</p>
                     </div>
 
-                    <hr className="mb-6 border-gray-100" />
-                    <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <hr className="mb-6 border-gray-100 dark:border-slate-700" />
+                    <h2 className="text-lg font-bold text-gray-700 dark:text-slate-300 mb-4 flex items-center gap-2">
                         <Lock size={18} /> Alterar Palavra-passe
                     </h2>
 

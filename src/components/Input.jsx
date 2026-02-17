@@ -11,22 +11,21 @@ export default function Input({
     return (
         <div className={className}>
             {label && (
-                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
             )}
 
             <div className="relative">
-                {/* Se houver ícone, renderiza-o */}
                 {Icon && (
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Icon className="h-5 w-5 text-gray-400" />
+                        <Icon className="h-5 w-5 text-gray-400 dark:text-slate-500" />
                     </div>
                 )}
 
                 <input
                     type={type}
-                    className={`block w-full py-3.5 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700 shadow-sm ${Icon ? 'pl-10' : 'pl-4'} pr-4`}
+                    className={`block w-full py-3.5 border border-gray-200 dark:border-slate-600 rounded-xl leading-5 bg-white dark:bg-slate-800 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm ${Icon ? 'pl-10' : 'pl-4'} pr-4`}
                     placeholder={placeholder}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
