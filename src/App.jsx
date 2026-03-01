@@ -14,8 +14,10 @@ import MyReports from './pages/MyReports';
 
 // Páginas de Admin
 import CreateRoom from './pages/CreateRoom';
+import EditRoom from './pages/EditRoom';
 import ManageUsers from './pages/ManageUsers';
 import ManageReservations from './pages/ManageReservations';
+import EditReservation from './pages/EditReservation';
 
 // Páginas de manutenção
 import ReportIssue from './pages/ReportIssue';
@@ -49,6 +51,7 @@ export default function App() {
       <Route path="/rooms" element={<PrivateRoute><Rooms /></PrivateRoute>} />
       <Route path="/my-reservations" element={<PrivateRoute><MyReservations /></PrivateRoute>} />
       <Route path="/new-reservation" element={<PrivateRoute><NewReservation /></PrivateRoute>} />
+      <Route path="/edit-reservation" element={<PrivateRoute><EditReservation /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
       {/* Reportar Problemas (qualquer user logado) */}
@@ -60,6 +63,7 @@ export default function App() {
 
       {/* Rotas de Admin (só admin) */}
       <Route path="/create-room" element={<AdminRoute><CreateRoom /></AdminRoute>} />
+      <Route path="/edit-room" element={<AdminRoute><EditRoom /></AdminRoute>} />
       <Route path="/manage-users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
       <Route path="/manage-reservations" element={<AdminRoute><ManageReservations /></AdminRoute>} />
 

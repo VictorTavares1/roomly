@@ -1,5 +1,16 @@
 const API_BASE = "http://127.0.0.1/roomly_api";
 
+/**
+ * Obtém o token de autenticação guardado no localStorage.
+ */
+function getToken() {
+  return localStorage.getItem("roomly_token");
+}
+
+/**
+ * Função central de comunicação com a API.
+ * Envia o token de autenticação automaticamente em todos os pedidos.
+ */
 async function request(endpoint, method = "GET", data = null) {
   const config = {
     method: method,
@@ -7,6 +18,12 @@ async function request(endpoint, method = "GET", data = null) {
       "Content-Type": "application/json",
     },
   };
+
+  // Adicionar token de autenticação se existir
+  const token = getToken();
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
 
   if (data) {
     config.body = JSON.stringify(data);
@@ -20,10 +37,17 @@ async function request(endpoint, method = "GET", data = null) {
       throw new Error("O servidor respondeu vazio!");
     }
 
+    // Se o servidor retornou 401, o token é inválido — forçar logout
+    if (response.status === 401) {
+      localStorage.removeItem("roomly_user");
+      localStorage.removeItem("roomly_token");
+      window.location.href = "/login";
+      throw new Error("Sessão expirada. Faz login novamente.");
+    }
+
     try {
       const json = JSON.parse(text);
 
-      // Se a API devolver um erro, lançamos com a mensagem para o catch apanhar
       if (json.status === "erro") {
         throw new Error(json.mensagem || "Erro desconhecido do servidor.");
       }
@@ -56,15 +80,12 @@ export const roomService = {
 
 export const reservationService = {
   getAll: () => request("api/reservations/list_all.php"),
-
-  // Funções novas para o Calendário e Agenda:
   getByDate: (date) => request(`api/reservations/list_by_date.php?date=${date}`),
   getCalendarEvents: () => request("api/reservations/calendar_events.php"),
-
-  getMyReservations: (userId) => request(`api/reservations/list_my.php?user_id=${userId}`),
+  getMyReservations: () => request("api/reservations/list_my.php"),
   create: (data) => request("api/reservations/create.php", "POST", data),
   update: (data) => request("api/reservations/update.php", "POST", data),
-  cancel: (id) => request("api/reservations/delete.php", "POST", { id }), // delete.php trata do cancelamento
+  cancel: (id) => request("api/reservations/delete.php", "POST", { id }),
 };
 
 export const userService = {
@@ -76,7 +97,7 @@ export const userService = {
 };
 
 export const dashboardService = {
-  getStats: (userId) => request(`api/reports/dashboard_stats.php?user_id=${userId}`),
+  getStats: () => request("api/reports/dashboard_stats.php"),
 };
 
 export const reportService = {

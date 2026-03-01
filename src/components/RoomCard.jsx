@@ -21,10 +21,6 @@ export default function RoomCard({ room }) {
                         <span>{room.has_projector ? "Tem Projetor" : "Sem Projetor"}</span>
                     </div>
                 </div>
-
-                <button className="btn w-full mt-4 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 border-none rounded-lg py-2 font-medium transition-colors">
-                    Ver Detalhes
-                </button>
             </div>
         </div>
     )

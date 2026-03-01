@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, ArrowRight, Loader, ArrowLeft } from "lucide-react";
 import Logo from "../components/Logo";
 import { translateMessage } from "../utils/translations";
+import campusBg from "../assets/campus-bg.jpg";
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,48 +31,50 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans bg-slate-100">
 
-      {/* FUNDO */}
+      {/* FUNDO SÓBRIO */}
       <div
-        className="absolute inset-0 z-0 bg-cover bg-center scale-105"
+        className="absolute inset-0 z-0 bg-cover bg-center"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2886&auto=format&fit=crop')"
+          backgroundImage: `url(${campusBg})`
         }}
       ></div>
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-900/90 to-gray-900/95 mix-blend-multiply"></div>
+      <div className="absolute inset-0 z-0 bg-slate-900/90 mix-blend-multiply"></div>
 
-      <Link to="/" className="absolute top-6 left-6 z-20 text-white/70 hover:text-white flex items-center gap-2 transition-colors">
-        <ArrowLeft size={20} /> Voltar ao Início
+      <Link to="/" className="absolute top-6 left-6 z-20 text-slate-300 hover:text-white flex items-center gap-2 transition-colors text-sm font-medium">
+        <ArrowLeft size={18} /> Voltar ao Portal
       </Link>
 
-      {/* CARD DE LOGIN */}
-      <div className="relative z-10 w-full max-w-md p-8 m-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl animate-fade-in-up">
+      {/* CARD DE LOGIN INSTITUCIONAL COM GLASSMORPHISM */}
+      <div className="relative z-10 w-full max-w-md p-10 m-4 bg-white/70 backdrop-blur-xl shadow-2xl rounded-2xl animate-fade-in-up border border-white/40 border-t-4 border-t-blue-700">
 
-        {/* CABEÇALHO DO CARD COM LOGO NOVO */}
+        {/* CABEÇALHO DO CARD */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Logo className="w-16 h-16 shadow-lg shadow-blue-600/40 rounded-2xl" />
+            <div className="p-3 bg-white/50 rounded-xl border border-white/50 shadow-sm">
+              <Logo className="w-12 h-12 text-slate-800" />
+            </div>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Bem-vindo!</h2>
-          <p className="text-blue-200 text-sm">Insere as tuas credenciais para entrar.</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Área Reservada</h2>
+          <p className="text-slate-600 text-sm font-medium">Acesso restrito a utilizadores autorizados.</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-100 text-sm text-center font-medium animate-shake">
+          <div className="mb-6 p-3 bg-red-50/80 border-l-4 border-red-500 text-red-700 text-sm font-medium backdrop-blur-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="group">
-            <label className="block text-xs font-bold text-blue-200 uppercase mb-2 ml-1">Email Escolar</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5 ml-1">Email Institucional</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-white transition-colors" size={20} />
+              <Mail className="absolute left-4 top-3.5 text-slate-500 group-focus-within:text-blue-700 transition-colors" size={18} />
               <input
                 type="email"
-                placeholder="exemplo@escola.pt"
-                className="w-full pl-12 pr-4 py-3.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-black/30 transition-all"
+                placeholder="nome@escola.pt"
+                className="w-full pl-11 pr-4 py-3 bg-white/60 border border-slate-300/50 rounded-lg text-slate-900 placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-sm backdrop-blur-sm"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -80,13 +83,13 @@ export default function Login() {
           </div>
 
           <div className="group">
-            <label className="block text-xs font-bold text-blue-200 uppercase mb-2 ml-1">Palavra-passe</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5 ml-1">Palavra-passe</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-white transition-colors" size={20} />
+              <Lock className="absolute left-4 top-3.5 text-slate-500 group-focus-within:text-blue-700 transition-colors" size={18} />
               <input
                 type="password"
                 placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-3.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-black/30 transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-white/60 border border-slate-300/50 rounded-lg text-slate-900 placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-sm backdrop-blur-sm"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -97,21 +100,21 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 mt-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-3.5 mt-4 bg-slate-900/90 hover:bg-slate-800 text-white font-semibold rounded-lg shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm backdrop-blur-sm"
           >
-            {loading ? <Loader className="animate-spin" size={20} /> : <>Entrar no Sistema <ArrowRight size={20} /></>}
+            {loading ? <Loader className="animate-spin" size={18} /> : <>Iniciar Sessão <ArrowRight size={18} /></>}
           </button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-white/40">
-            Esqueceste-te da palavra-passe? <span className="text-blue-300 hover:text-white cursor-pointer transition-colors">Contacta a secretaria.</span>
+        <div className="mt-8 pt-6 border-t border-slate-200/50 text-center">
+          <p className="text-xs text-slate-500 font-medium">
+            Problemas no acesso? <span className="text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors">Contacta os Serviços Administrativos.</span>
           </p>
         </div>
       </div>
 
-      <div className="absolute bottom-4 text-xs text-white/20">
-        © 2026 Roomly Education
+      <div className="absolute bottom-4 text-xs text-slate-400">
+        © 2026 Roomly Education • Plataforma Oficial
       </div>
     </div>
   );

@@ -9,35 +9,38 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Ao abrir a app, verifica se já existe login guardado
-        // Mudei a chave para "roomly_user" para evitar conflitos com outros projetos
         const storedUser = localStorage.getItem("roomly_user");
+        const storedToken = localStorage.getItem("roomly_token");
 
-        if (storedUser) {
+        if (storedUser && storedToken) {
             try {
                 setUser(JSON.parse(storedUser));
             } catch (error) {
                 console.error("Erro ao ler dados", error);
                 localStorage.removeItem("roomly_user");
+                localStorage.removeItem("roomly_token");
             }
+        } else {
+            // Se falta um dos dois, limpa ambos
+            localStorage.removeItem("roomly_user");
+            localStorage.removeItem("roomly_token");
         }
         setLoading(false);
     }, []);
 
     const login = async (email, password) => {
         try {
-            // 1. Pede à API para verificar o login
             const res = await authService.login(email, password);
 
-            // 2. Se a API disser "sucesso", guarda os dados
-            if (res.status === "sucesso" && res.user) {
+            if (res.status === "sucesso" && res.user && res.token) {
                 setUser(res.user);
                 localStorage.setItem("roomly_user", JSON.stringify(res.user));
+                localStorage.setItem("roomly_token", res.token);
                 return true;
             } else {
                 throw new Error(res.mensagem || "Erro ao entrar");
             }
         } catch (error) {
-            // Passa o erro para o Login.jsx mostrar a mensagem vermelha
             throw error;
         }
     };
@@ -46,6 +49,7 @@ export function AuthProvider({ children }) {
         setLoading(true);
         setUser(null);
         localStorage.removeItem("roomly_user");
+        localStorage.removeItem("roomly_token");
 
         setTimeout(() => {
             window.location.href = "/login";

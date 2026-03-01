@@ -66,9 +66,17 @@ export default function ManageUsers() {
     };
 
     const handleRoleChange = async (userId, newRole) => {
-        const res = await userService.changeRole(userId, newRole);
-        if (res.status === "sucesso") {
-            setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        try {
+            const res = await userService.changeRole(userId, newRole);
+            if (res.status === "sucesso") {
+                setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+                toast.success("Cargo atualizado!");
+            } else {
+                toast.error(translateMessage(res.mensagem) || "Erro ao alterar cargo.");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao alterar cargo.");
         }
     };
 
@@ -98,7 +106,7 @@ export default function ManageUsers() {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-slate-400 uppercase text-xs font-bold border-b dark:border-slate-700">
                         <tr><th className="p-4">Nome</th><th className="p-4">Email</th><th className="p-4">Cargo</th><th className="p-4 text-center">Estado</th></tr>

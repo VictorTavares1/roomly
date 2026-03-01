@@ -65,7 +65,7 @@ export default function ManageReservations() {
                 <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Pesquisar por nome, sala, motivo..." />
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
                 {filteredReservations.length === 0 ? (
                     <div className="p-12 text-center text-gray-400 dark:text-slate-500 flex flex-col items-center gap-4">
                         <Search size={48} className="opacity-20" />

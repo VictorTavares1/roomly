@@ -13,7 +13,7 @@ export default function MyReservations() {
 
     useEffect(() => {
         if (user?.id) {
-            reservationService.getMyReservations(user.id)
+            reservationService.getMyReservations()
                 .then((data) => setReservations(data))
                 .catch((err) => console.error(err));
         }
@@ -48,7 +48,7 @@ export default function MyReservations() {
     return (
         <Layout>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-6">Minhas Reservas 🗓️</h1>
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
                 {reservations.length === 0 ? (
                     <div className="p-8 text-center text-gray-500 dark:text-slate-400">Ainda não tens reservas feitas.</div>
                 ) : (

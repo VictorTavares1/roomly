@@ -28,8 +28,7 @@ export default function Profile() {
 
         try {
             const res = await authService.updatePassword({
-                id: user.id,
-                old_password: passwords.old_password,
+                current_password: passwords.old_password,
                 new_password: passwords.new_password
             });
 

@@ -72,7 +72,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (user?.id) {
-            dashboardService.getStats(user.id)
+            dashboardService.getStats()
                 .then((data) => {
                     if (!data.error) {
                         const processedActivities = (data.recent_activities || []).map(act => ({
