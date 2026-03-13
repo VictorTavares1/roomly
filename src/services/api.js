@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1/roomly_api";
+const API_BASE = "http://127.0.0.1/Roomly/roomly_api";
 
 /**
  * Obtém o token de autenticação guardado no localStorage.

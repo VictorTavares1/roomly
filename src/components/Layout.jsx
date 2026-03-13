@@ -9,7 +9,7 @@ export default function Layout({ children }) {
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors duration-300">
 
             {/* === SIDEBAR === */}
-            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-blue-900 dark:bg-slate-950 transition-all duration-300 ease-in-out transform 
+            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 transition-all duration-300 ease-in-out transform 
                 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
                 md:translate-x-0 md:static md:flex-shrink-0`}
             >

@@ -23,102 +23,127 @@ export default function Sidebar() {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
-    const isActive = (path) => location.pathname === path
-        ? "bg-white/10 text-white shadow-lg"
-        : "text-blue-100 hover:bg-white/5 hover:text-white";
+    const isActive = (path) => location.pathname === path;
+
+    const getInitials = (name) => {
+        if (!name) return "U";
+        const parts = name.split(" ");
+        return parts.length === 1
+            ? parts[0].charAt(0).toUpperCase()
+            : (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    };
+
+    const NavItem = ({ to, icon: Icon, label }) => {
+        const active = isActive(to);
+        return (
+            <Link
+                to={to}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-[13px] font-medium
+                    ${active
+                        ? "bg-blue-600/15 text-blue-400"
+                        : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+                    }`}
+            >
+                <Icon
+                    size={18}
+                    strokeWidth={active ? 2.2 : 1.8}
+                    className={active ? "text-blue-400" : "text-slate-500"}
+                />
+                {label}
+            </Link>
+        );
+    };
 
     return (
-        <aside className="w-64 bg-blue-900 dark:bg-slate-950 text-white h-full flex flex-col transition-colors duration-300">
+        <aside className="w-64 h-full flex flex-col bg-slate-900 border-r border-slate-800 transition-colors duration-300">
 
-            {/* LOGO */}
-            <div className="flex items-center gap-3 mb-10 px-4 pt-6">
-                <div className="bg-white/10 p-1 rounded-xl">
-                    <Logo className="w-10 h-10" />
+            {/* === LOGO === */}
+            <div className="flex items-center gap-3 px-5 pt-6 pb-5">
+                <div className="bg-blue-600 p-1.5 rounded-lg">
+                    <Logo className="w-7 h-7" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight">Roomly</h1>
-                    <p className="text-xs text-blue-300">Gestão de Salas</p>
+                    <h1 className="text-base font-bold text-white tracking-tight leading-none">Roomly</h1>
+                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">Gestão de Salas</p>
                 </div>
             </div>
 
-            {/* MENU PRINCIPAL */}
-            <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar px-2">
-                <p className="text-xs uppercase text-blue-400 font-bold px-4 mb-2 mt-2 tracking-wider">Principal</p>
+            {/* === PERFIL === */}
+            <div className="px-4 mb-4">
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-semibold text-white">{getInitials(user?.name)}</span>
+                    </div>
+                    <div className="overflow-hidden">
+                        <p className="text-sm font-medium text-slate-200 truncate">{user?.name || "Utilizador"}</p>
+                        <p className="text-[11px] text-slate-500 capitalize">{user?.role || "professor"}</p>
+                    </div>
+                </div>
+            </div>
 
-                <Link to="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/dashboard')}`}>
-                    <LayoutDashboard size={20} /> Início
-                </Link>
-                <Link to="/rooms" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/rooms')}`}>
-                    <MapPin size={20} /> Ver Salas
-                </Link>
-                <Link to="/my-reservations" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/my-reservations')}`}>
-                    <Calendar size={20} /> Minhas Reservas
-                </Link>
-                <Link to="/new-reservation" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/new-reservation')}`}>
-                    <PlusCircle size={20} /> Nova Reserva
-                </Link>
+            {/* === MENU PRINCIPAL === */}
+            <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 space-y-0.5">
 
-                <Link to="/report-issue" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/report-issue')}`}>
-                    <AlertTriangle size={20} /> Reportar Problema
-                </Link>
-                <Link to="/my-reports" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/my-reports')}`}>
-                    <ClipboardList size={20} /> Meus Reports
-                </Link>
+                <p className="text-[10px] uppercase text-slate-600 font-semibold px-3 mb-1.5 tracking-wider">
+                    Principal
+                </p>
 
-                {/* MENU ADMINISTRAÇÃO */}
+                <NavItem to="/dashboard" icon={LayoutDashboard} label="Início" />
+                <NavItem to="/rooms" icon={MapPin} label="Ver Salas" />
+                <NavItem to="/my-reservations" icon={Calendar} label="Minhas Reservas" />
+                <NavItem to="/new-reservation" icon={PlusCircle} label="Nova Reserva" />
+
+                <div className="my-3 mx-2 border-t border-slate-800" />
+
+                <p className="text-[10px] uppercase text-slate-600 font-semibold px-3 mb-1.5 tracking-wider">
+                    Suporte
+                </p>
+
+                <NavItem to="/report-issue" icon={AlertTriangle} label="Reportar Problema" />
+                <NavItem to="/my-reports" icon={ClipboardList} label="Meus Reports" />
+
+                {/* === ADMINISTRAÇÃO === */}
                 {(user?.role === 'admin' || user?.role === 'funcionario') && (
                     <>
-                        <div className="my-4 border-t border-blue-800/50"></div>
-                        <p className="text-xs uppercase text-blue-400 font-bold px-4 mb-2 tracking-wider">Administração</p>
+                        <div className="my-3 mx-2 border-t border-slate-800" />
+                        <p className="text-[10px] uppercase text-slate-600 font-semibold px-3 mb-1.5 tracking-wider">
+                            Administração
+                        </p>
 
-                        <Link to="/manage-reports" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-reports')}`}>
-                            <Wrench size={20} /> Manutenção
-                        </Link>
+                        <NavItem to="/manage-reports" icon={Wrench} label="Manutenção" />
 
                         {user?.role === 'admin' && (
                             <>
-                                <Link to="/create-room" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/create-room')}`}>
-                                    <PlusCircle size={20} /> Criar Sala
-                                </Link>
-                                <Link to="/manage-users" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-users')}`}>
-                                    <Users size={20} /> Utilizadores
-                                </Link>
-                                <Link to="/manage-reservations" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/manage-reservations')}`}>
-                                    <BookOpen size={20} /> Gerir Reservas
-                                </Link>
+                                <NavItem to="/create-room" icon={PlusCircle} label="Criar Sala" />
+                                <NavItem to="/manage-users" icon={Users} label="Utilizadores" />
+                                <NavItem to="/manage-reservations" icon={BookOpen} label="Gerir Reservas" />
                             </>
                         )}
                     </>
                 )}
             </nav>
 
-            {/* RODAPÉ */}
-            <div className="mt-auto border-t border-blue-800 dark:border-slate-800 p-4 space-y-2">
-                {/* TOGGLE DARK MODE */}
+            {/* === RODAPÉ === */}
+            <div className="mt-auto border-t border-slate-800 p-3 space-y-0.5">
+
                 <button
                     onClick={toggleTheme}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-blue-200 hover:bg-white/5 hover:text-white transition-all font-medium group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all duration-200 text-[13px] font-medium"
                 >
                     {theme === "dark" ? (
-                        <>
-                            <Sun size={20} className="group-hover:rotate-45 transition-transform" /> Modo Claro
-                        </>
+                        <><Sun size={18} strokeWidth={1.8} className="text-amber-500" /> Modo Claro</>
                     ) : (
-                        <>
-                            <Moon size={20} className="group-hover:-rotate-12 transition-transform" /> Modo Escuro
-                        </>
+                        <><Moon size={18} strokeWidth={1.8} className="text-slate-500" /> Modo Escuro</>
                     )}
                 </button>
 
-                <Link to="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive('/settings')}`}>
-                    <Settings size={20} /> Definições
-                </Link>
+                <NavItem to="/settings" icon={Settings} label="Definições" />
 
                 <button
                     onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all font-medium group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-red-950/30 hover:text-red-400 transition-all duration-200 text-[13px] font-medium"
                 >
-                    <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    <LogOut size={18} strokeWidth={1.8} />
                     Terminar Sessão
                 </button>
             </div>
