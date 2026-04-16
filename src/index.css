@@ -44,9 +44,43 @@
 
 /* Dark mode tokens */
 .dark {
-    --glass-bg: rgba(15, 23, 42, 0.7);
+    /* ─── Glass tokens ─── */
+    --glass-bg: rgba(22, 27, 34, 0.75);
     --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+    /* ─── Professional dark palette (GitHub-inspired) ─── */
+    /*
+     * HIERARQUIA DE CAMADAS:
+     *   Fundo   (#0d1117)  →  darkest, base da página
+     *   Surface (#161b22)  →  cards, painéis, navbar
+     *   Elevated(#1c2333)  →  hover, nested, dropdowns sobre cards
+     */
+
+    /* Slate scale — redefine para dark mode profissional */
+    --color-slate-950: #060a12;
+    --color-slate-900: #0d1117;   /* fundo da página */
+    --color-slate-800: #161b22;   /* cards e painéis */
+    --color-slate-700: #1c2333;   /* hover states, elementos elevados */
+    --color-slate-600: #2d3748;   /* borders fortes */
+    --color-slate-500: #6e7681;   /* texto muito muted */
+    --color-slate-400: #8b949e;   /* texto muted (labels, timestamps) */
+    --color-slate-300: #adbac7;   /* texto secundário */
+    --color-slate-200: #cdd9e5;   /* texto ligeiramente muted */
+    --color-slate-100: #e6edf3;   /* texto primário */
+    --color-slate-50:  #f0f6fc;   /* texto em destaque */
+
+    /* Gray scale — espelha slate para consistência */
+    --color-gray-900: #0d1117;
+    --color-gray-800: #161b22;
+    --color-gray-700: #1c2333;
+    --color-gray-600: #2d3748;
+    --color-gray-500: #6e7681;
+    --color-gray-400: #8b949e;
+    --color-gray-300: #adbac7;
+    --color-gray-200: #21262d;    /* borders subtis */
+    --color-gray-100: #1c2333;    /* fundos de tabela (thead) */
+    --color-gray-50:  #161b22;    /* fundo muito subtil */
 }
 
 /* --- ESTILOS GLOBAIS --- */
@@ -66,12 +100,12 @@ body {
 /* Dark mode body */
 .dark body,
 body:where(.dark *) {
-    background-color: #020617;
+    background-color: #0d1117;
     background-image:
-        radial-gradient(ellipse at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 90% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 70%);
-    color: #e2e8f0;
+        radial-gradient(ellipse at 15% 15%, rgba(88, 166, 255, 0.04) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 85%, rgba(63, 185, 80, 0.03) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 70%);
+    color: #e6edf3;
 }
 
 /* --- SELECTION --- */
@@ -451,12 +485,12 @@ body:where(.dark *) {
 }
 
 .dark .glass-card {
-    background: rgba(30, 41, 59, 0.6);
-    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(22, 27, 34, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
     box-shadow:
-        0 4px 24px rgba(0, 0, 0, 0.2),
-        0 1px 2px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        0 4px 24px rgba(0, 0, 0, 0.35),
+        0 1px 2px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .glass-dark {
@@ -659,4 +693,98 @@ body:where(.dark *) {
 .transition-theme {
     transition-duration: 0.3s;
     transition-timing-function: var(--ease-smooth);
+}
+
+/* ============================================
+   🌑 DARK MODE — EXPLICIT LAYER OVERRIDES
+   Garante hierarquia visual mesmo que o Tailwind
+   compile os valores de cor de forma estática.
+   ============================================ */
+
+/* Layer 0 — Fundo da página */
+.dark .dark-bg,
+.dark [class*="bg-gray-50"],
+.dark [class*="bg-slate-900"] {
+    background-color: #0d1117 !important;
+}
+
+/* Layer 1 — Cards e painéis */
+.dark [class*="bg-white"],
+.dark [class*="bg-slate-800"] {
+    background-color: #161b22 !important;
+}
+
+/* Layer 2 — Hover e elementos elevados */
+.dark [class*="hover:bg-slate-700"]:hover,
+.dark [class*="hover:bg-gray-100"]:hover,
+.dark [class*="hover:bg-gray-50"]:hover {
+    background-color: #1c2333 !important;
+}
+
+/* Layer 2 — Thead de tabelas e fundos muito subtis */
+.dark [class*="bg-slate-900"]:not(html):not(body) {
+    background-color: #0d1117 !important;
+}
+
+/* Borders no dark mode */
+.dark [class*="border-slate-700"],
+.dark [class*="border-gray-200"],
+.dark [class*="divide-slate-700"],
+.dark [class*="divide-gray-100"] {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Texto primário */
+.dark [class*="text-gray-800"],
+.dark [class*="text-gray-900"],
+.dark [class*="text-slate-200"] {
+    color: #e6edf3 !important;
+}
+
+/* Texto secundário */
+.dark [class*="text-gray-600"],
+.dark [class*="text-gray-700"],
+.dark [class*="text-slate-300"] {
+    color: #adbac7 !important;
+}
+
+/* Texto muted */
+.dark [class*="text-gray-500"],
+.dark [class*="text-gray-400"],
+.dark [class*="text-slate-400"],
+.dark [class*="text-slate-500"] {
+    color: #8b949e !important;
+}
+
+/* Navbar especificamente — fica ao nível do fundo */
+.dark header[class*="bg-white"],
+.dark header[class*="bg-slate-800"] {
+    background-color: #0d1117 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dropdowns — ficam acima dos cards */
+.dark [class*="bg-slate-800"][class*="rounded-xl"][class*="shadow"],
+.dark [class*="bg-white"][class*="rounded-xl"][class*="shadow"] {
+    background-color: #1c2333 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Inputs no dark mode */
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #161b22 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e6edf3 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #6e7681 !important;
+}
+
+/* Botão outline no dark mode */
+.dark [class*="bg-slate-800"][class*="border"] {
+    background-color: #161b22 !important;
 }

@@ -24,7 +24,7 @@ export default function Select({
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     required={required}
-                    className={`block w-full py-3.5 border border-gray-200 dark:border-slate-600 rounded-xl leading-5 bg-white dark:bg-slate-800 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm appearance-none ${Icon ? 'pl-10' : 'pl-4'} pr-10 cursor-pointer`}
+                    className={`block w-full py-3.5 border border-gray-200 dark:border-white/[0.1] rounded-xl leading-5 bg-white dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 dark:focus:border-blue-500/60 transition-all font-medium text-slate-700 dark:text-slate-100 shadow-sm dark:shadow-black/10 appearance-none ${Icon ? 'pl-10' : 'pl-4'} pr-10 cursor-pointer`}
                 >
                     <option value="" disabled>{placeholder}</option>
                     {options.map((opt) => (

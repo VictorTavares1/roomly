@@ -11,6 +11,7 @@ import MyReservations from './pages/MyReservations';
 import NewReservation from './pages/NewReservation';
 import Settings from './pages/Settings';
 import MyReports from './pages/MyReports';
+import RoomDetail from './pages/RoomDetail';
 
 // Páginas de Admin
 import CreateRoom from './pages/CreateRoom';
@@ -50,6 +51,7 @@ export default function App() {
       {/* Rotas de Utilizador */}
       <Route path="/rooms" element={<PrivateRoute><Rooms /></PrivateRoute>} />
       <Route path="/my-reservations" element={<PrivateRoute><MyReservations /></PrivateRoute>} />
+      <Route path="/room-detail" element={<PrivateRoute><RoomDetail /></PrivateRoute>} />
       <Route path="/new-reservation" element={<PrivateRoute><NewReservation /></PrivateRoute>} />
       <Route path="/edit-reservation" element={<PrivateRoute><EditReservation /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />

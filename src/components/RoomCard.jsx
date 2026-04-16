@@ -1,27 +1,206 @@
-import { Users, Projector } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+    Users, Monitor, GraduationCap, Building2,
+    UsersRound, CalendarPlus, Info,
+    Pencil, Trash2
+} from "lucide-react";
 
-export default function RoomCard({ room }) {
+const WEEKLY_MAX = 50;
+
+function inferType(room) {
+    if (room.type) return room.type.toUpperCase();
+    const name = (room.name || "").toLowerCase();
+    if (name.includes("audit")) return "AUDITÓRIO";
+    if (
+        name.includes("reuni") ||
+        name.includes("conferên") ||
+        name.includes("conferen")
+    )
+        return "REUNIÃO";
+    if (
+        name.includes("lab") ||
+        name.includes("ciência") ||
+        name.includes("cienc") ||
+        name.includes("quím") ||
+        name.includes("quim") ||
+        name.includes("inform") ||
+        name.includes("física") ||
+        name.includes("fisica")
+    )
+        return "LABORATÓRIO";
+    return "AULA";
+}
+
+const typeConfig = {
+    AUDITÓRIO: {
+        icon: Building2,
+        bg: "bg-indigo-800",
+        iconColor: "text-indigo-200",
+    },
+    REUNIÃO: { icon: UsersRound, bg: "bg-blue-700", iconColor: "text-blue-100" },
+    LABORATÓRIO: {
+        icon: Monitor,
+        bg: "bg-cyan-800",
+        iconColor: "text-cyan-100",
+    },
+    AULA: {
+        icon: GraduationCap,
+        bg: "bg-emerald-700",
+        iconColor: "text-emerald-100",
+    },
+};
+
+const statusConfig = {
+    DISPONÍVEL: {
+        badge: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    },
+    OCUPADA: {
+        badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    },
+    "EM MANUTENÇÃO": {
+        badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    },
+};
+
+function getStatus(room) {
+    if (!room.status) return "DISPONÍVEL";
+    const s = room.status.toLowerCase();
+    if (s.includes("ocup")) return "OCUPADA";
+    if (s.includes("manu")) return "EM MANUTENÇÃO";
+    return "DISPONÍVEL";
+}
+
+export default function RoomCard({
+    room,
+    weeklyHours,
+    isAdmin,
+    onEdit,
+    onDelete,
+    onViewDetails,
+}) {
+    const navigate = useNavigate();
+    const type = inferType(room);
+    const { icon: Icon, bg, iconColor } =
+        typeConfig[type] || typeConfig["AULA"];
+    const status = getStatus(room);
+    const { badge } = statusConfig[status] || statusConfig["DISPONÍVEL"];
+
+    const hours =
+        weeklyHours != null ? Math.round(weeklyHours * 10) / 10 : null;
+    const progressPct =
+        hours != null ? Math.min((hours / WEEKLY_MAX) * 100, 100) : null;
+    const isHighOccupancy = progressPct != null && progressPct > 70;
+
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-100 dark:border-slate-700">
-            <div className="h-32 bg-blue-600 dark:bg-blue-700 flex items-center justify-center">
-                <h3 className="text-white text-3xl font-bold opacity-50">{room.name.charAt(0)}</h3>
+        <div className="relative group bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5 hover:shadow-md dark:hover:shadow-black/30 transition-all flex flex-col gap-4">
+
+            {/* Admin hover actions */}
+            {isAdmin && (
+                <div className="absolute -top-2 -right-2 flex gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                        onClick={onEdit}
+                        className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-md transition-colors"
+                    >
+                        <Pencil size={13} />
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-colors"
+                    >
+                        <Trash2 size={13} />
+                    </button>
+                </div>
+            )}
+
+            {/* Top row: icon + status badge */}
+            <div className="flex items-start justify-between">
+                <div
+                    className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center shrink-0`}
+                >
+                    <Icon size={19} className={iconColor} />
+                </div>
+                <span
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-full tracking-wide ${badge}`}
+                >
+                    {status}
+                </span>
             </div>
 
-            <div className="p-5">
-                <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200 mb-2">{room.name}</h2>
-
-                <div className="space-y-2 text-gray-600 dark:text-slate-400 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Users size={16} className="text-blue-500" />
-                        <span>Capacidade: <b>{room.capacity} pessoas</b></span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Projector size={16} className={room.has_projector ? "text-green-500" : "text-gray-400 dark:text-slate-500"} />
-                        <span>{room.has_projector ? "Tem Projetor" : "Sem Projetor"}</span>
-                    </div>
+            {/* Room name + capacity + type */}
+            <div>
+                <h3 className="text-[17px] font-bold text-gray-800 dark:text-slate-100 leading-snug">
+                    {room.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
+                        <Users size={13} className="text-gray-400 dark:text-slate-500" />
+                        {room.capacity} pessoas
+                    </span>
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 rounded tracking-wide">
+                        {type}
+                    </span>
                 </div>
             </div>
+
+            {/* Weekly occupation bar */}
+            {hours != null ? (
+                <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs text-gray-500 dark:text-slate-400">
+                            Ocupação semanal
+                        </span>
+                        <span
+                            className={`text-xs font-semibold ${isHighOccupancy ? "text-orange-600 dark:text-orange-400" : "text-blue-600 dark:text-blue-400"}`}
+                        >
+                            {hours}h / {WEEKLY_MAX}h
+                        </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all ${isHighOccupancy ? "bg-orange-500" : "bg-blue-500"}`}
+                            style={{ width: `${progressPct}%` }}
+                        />
+                    </div>
+                </div>
+            ) : (
+                <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs text-gray-500 dark:text-slate-400">
+                            Ocupação semanal
+                        </span>
+                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                            --h / {WEEKLY_MAX}h
+                        </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full" />
+                </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex gap-2 mt-auto pt-1">
+                <button
+                    onClick={() => onViewDetails ? onViewDetails(room) : null}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium border border-gray-200 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                    <Info size={14} />
+                    Ver Detalhes
+                </button>
+                <button
+                    onClick={() =>
+                        status !== "EM MANUTENÇÃO" &&
+                        navigate("/new-reservation", { state: { room } })
+                    }
+                    disabled={status === "EM MANUTENÇÃO"}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                        status === "EM MANUTENÇÃO"
+                            ? "bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed"
+                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                    }`}
+                >
+                    <CalendarPlus size={14} />
+                    {status === "EM MANUTENÇÃO" ? "Indisponível" : "Reservar"}
+                </button>
+            </div>
         </div>
-    )
+    );
 }

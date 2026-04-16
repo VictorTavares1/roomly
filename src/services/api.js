@@ -85,6 +85,7 @@ export const reservationService = {
   getMyReservations: () => request("api/reservations/list_my.php"),
   create: (data) => request("api/reservations/create.php", "POST", data),
   update: (data) => request("api/reservations/update.php", "POST", data),
+  getByRoom: (roomId) => request(`api/reservations/list_by_room.php?room_id=${roomId}`),
   cancel: (id) => request("api/reservations/delete.php", "POST", { id }),
 };
 
