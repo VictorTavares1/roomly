@@ -1,34 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import {
     Users, Monitor, GraduationCap, Building2,
-    UsersRound, CalendarPlus, Info,
-    Pencil, Trash2
+    UsersRound, CalendarPlus, Info
 } from "lucide-react";
 
 const WEEKLY_MAX = 50;
 
 function inferType(room) {
-    if (room.type) return room.type.toUpperCase();
-    const name = (room.name || "").toLowerCase();
-    if (name.includes("audit")) return "AUDITÓRIO";
-    if (
-        name.includes("reuni") ||
-        name.includes("conferên") ||
-        name.includes("conferen")
-    )
-        return "REUNIÃO";
-    if (
-        name.includes("lab") ||
-        name.includes("ciência") ||
-        name.includes("cienc") ||
-        name.includes("quím") ||
-        name.includes("quim") ||
-        name.includes("inform") ||
-        name.includes("física") ||
-        name.includes("fisica")
-    )
-        return "LABORATÓRIO";
-    return "AULA";
+    return room.type ? room.type.toUpperCase() : "AULA";
 }
 
 const typeConfig = {
@@ -73,10 +52,10 @@ function getStatus(room) {
 export default function RoomCard({
     room,
     weeklyHours,
-    isAdmin,
-    onEdit,
-    onDelete,
     onViewDetails,
+    availabilityDate,
+    availabilityStart,
+    availabilityEnd,
 }) {
     const navigate = useNavigate();
     const type = inferType(room);
@@ -92,25 +71,7 @@ export default function RoomCard({
     const isHighOccupancy = progressPct != null && progressPct > 70;
 
     return (
-        <div className="relative group bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5 hover:shadow-md dark:hover:shadow-black/30 transition-all flex flex-col gap-4">
-
-            {/* Admin hover actions */}
-            {isAdmin && (
-                <div className="absolute -top-2 -right-2 flex gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <button
-                        onClick={onEdit}
-                        className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-md transition-colors"
-                    >
-                        <Pencil size={13} />
-                    </button>
-                    <button
-                        onClick={onDelete}
-                        className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-colors"
-                    >
-                        <Trash2 size={13} />
-                    </button>
-                </div>
-            )}
+        <div className="relative bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5 hover:shadow-md dark:hover:shadow-black/30 transition-all flex flex-col gap-4">
 
             {/* Top row: icon + status badge */}
             <div className="flex items-start justify-between">
@@ -183,24 +144,32 @@ export default function RoomCard({
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium border border-gray-200 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                 >
                     <Info size={14} />
-                    Ver Detalhes
+                    Detalhes
                 </button>
                 <button
                     onClick={() =>
-                        status !== "EM MANUTENÇÃO" &&
-                        navigate("/new-reservation", { state: { room } })
+                        status === "DISPONÍVEL" &&
+                        navigate("/new-reservation", {
+                            state: {
+                                room,
+                                date: availabilityDate || "",
+                                startTime: availabilityStart || "",
+                                endTime: availabilityEnd || "",
+                            },
+                        })
                     }
-                    disabled={status === "EM MANUTENÇÃO"}
+                    disabled={status !== "DISPONÍVEL"}
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                        status === "EM MANUTENÇÃO"
+                        status !== "DISPONÍVEL"
                             ? "bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed"
                             : "bg-blue-600 hover:bg-blue-700 text-white"
                     }`}
                 >
                     <CalendarPlus size={14} />
-                    {status === "EM MANUTENÇÃO" ? "Indisponível" : "Reservar"}
+                    {status === "EM MANUTENÇÃO" ? "Em Manutenção" : status === "OCUPADA" ? "Ocupada" : "Reservar"}
                 </button>
             </div>
+
         </div>
     );
 }

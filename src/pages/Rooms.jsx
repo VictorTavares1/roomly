@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, X, Type, Users, Projector, Save,
+import { Search, X, Type, Users, Projector, Save,
     GraduationCap, Building2, Monitor, UsersRound,
-    CalendarPlus, AlertTriangle, Clock, CheckCircle2, Wrench
+    CalendarPlus, AlertTriangle, Clock, CheckCircle2, Wrench,
+    Calendar, MapPin
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
@@ -42,23 +43,7 @@ function getRoomStatus(room) {
 }
 
 function inferType(room) {
-    if (room.type) return room.type.toUpperCase();
-    const name = (room.name || "").toLowerCase();
-    if (name.includes("audit")) return "AUDITÓRIO";
-    if (name.includes("reuni") || name.includes("conferên") || name.includes("conferen"))
-        return "REUNIÃO";
-    if (
-        name.includes("lab") ||
-        name.includes("ciência") ||
-        name.includes("cienc") ||
-        name.includes("quím") ||
-        name.includes("quim") ||
-        name.includes("inform") ||
-        name.includes("física") ||
-        name.includes("fisica")
-    )
-        return "LABORATÓRIO";
-    return "AULA";
+    return room.type ? room.type.toUpperCase() : "AULA";
 }
 
 function matchesCapacity(capacity, filter) {
@@ -78,19 +63,13 @@ export default function Rooms() {
     const [rooms, setRooms] = useState([]);
     const [weeklyMap, setWeeklyMap] = useState(null);
 
-    // Modal Nova Sala
-    const [showModal, setShowModal] = useState(false);
-    const [modalName, setModalName] = useState("");
-    const [modalCapacity, setModalCapacity] = useState("");
-    const [modalProjector, setModalProjector] = useState(false);
-    const [modalLoading, setModalLoading] = useState(false);
-
     // Modal Editar Sala
     const [showEditModal, setShowEditModal] = useState(false);
     const [editRoom, setEditRoom] = useState(null);
     const [editName, setEditName] = useState("");
     const [editCapacity, setEditCapacity] = useState("");
     const [editProjector, setEditProjector] = useState(false);
+    const [editType, setEditType] = useState("AULA");
     const [editLoading, setEditLoading] = useState(false);
 
     // Modal Ver Detalhes
@@ -104,13 +83,26 @@ export default function Rooms() {
     const [capacityInput, setCapacityInput] = useState("");
     const [stateInput, setStateInput] = useState("");
 
+    // Availability filter inputs
+    const [dateInput, setDateInput] = useState("");
+    const [startTimeInput, setStartTimeInput] = useState("");
+    const [endTimeInput, setEndTimeInput] = useState("");
+
     // Applied filter state (what actually filters)
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
     const [capacityFilter, setCapacityFilter] = useState("");
     const [stateFilter, setStateFilter] = useState("");
 
-    useEffect(() => {
+    // Available rooms from backend (null = not fetched yet / no date filter active)
+    const [availableIds, setAvailableIds] = useState(null);
+    const [availableRoomsMap, setAvailableRoomsMap] = useState({});
+    const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const nowTimeStr = new Date().toTimeString().slice(0, 5);
+
+    const fetchRooms = useCallback(() => {
         roomService
             .getAll()
             .then((data) => setRooms(Array.isArray(data) ? data : []))
@@ -125,46 +117,46 @@ export default function Rooms() {
             .catch(() => setWeeklyMap({}));
     }, []);
 
+    useEffect(() => {
+        fetchRooms();
+        const interval = setInterval(fetchRooms, 10000);
+        return () => clearInterval(interval);
+    }, [fetchRooms]);
+
     // Search filters live; dropdowns applied via button
     useEffect(() => {
         setSearchTerm(searchInput);
     }, [searchInput]);
 
-    const applyFilters = () => {
+    const applyFilters = async () => {
         setTypeFilter(typeInput);
         setCapacityFilter(capacityInput);
         setStateFilter(stateInput);
-    };
 
-    const openModal = () => {
-        setModalName("");
-        setModalCapacity("");
-        setModalProjector(false);
-        setShowModal(true);
-    };
-
-    const handleCreateRoom = async (e) => {
-        e.preventDefault();
-        setModalLoading(true);
-        try {
-            const res = await roomService.create({
-                name: modalName,
-                capacity: modalCapacity,
-                has_projector: modalProjector ? 1 : 0,
-            });
-            if (res.status === "sucesso") {
-                toast.success("Sala criada com sucesso! 🏢");
-                setShowModal(false);
-                // Recarregar lista
-                const data = await roomService.getAll();
-                setRooms(Array.isArray(data) ? data : []);
-            } else {
-                toast.error(translateMessage(res.mensagem));
+        if (dateInput && startTimeInput && endTimeInput) {
+            if (startTimeInput >= endTimeInput) {
+                toast.error("A hora de fim tem de ser depois da hora de início.");
+                return;
             }
-        } catch {
-            toast.error("Erro ao criar sala.");
-        } finally {
-            setModalLoading(false);
+            setAvailabilityLoading(true);
+            try {
+                const data = await roomService.getAvailable(dateInput, startTimeInput, endTimeInput);
+                const list = Array.isArray(data) ? data : [];
+                const ids = new Set(list.map((r) => String(r.id)));
+                const map = {};
+                list.forEach((r) => { map[String(r.id)] = r; });
+                setAvailableIds(ids);
+                setAvailableRoomsMap(map);
+            } catch {
+                toast.error("Erro ao verificar disponibilidade.");
+                setAvailableIds(null);
+                setAvailableRoomsMap({});
+            } finally {
+                setAvailabilityLoading(false);
+            }
+        } else {
+            setAvailableIds(null);
+            setAvailableRoomsMap({});
         }
     };
 
@@ -173,6 +165,7 @@ export default function Rooms() {
         setEditName(sala.name || "");
         setEditCapacity(String(sala.capacity || ""));
         setEditProjector(sala.has_projector == 1);
+        setEditType(sala.type || "AULA");
         setShowEditModal(true);
     };
 
@@ -185,9 +178,10 @@ export default function Rooms() {
                 name: editName,
                 capacity: parseInt(editCapacity, 10),
                 has_projector: editProjector ? 1 : 0,
+                type: editType,
             });
             if (res.status === "sucesso") {
-                toast.success("Sala atualizada com sucesso! 🏢");
+                toast.success("Sala atualizada com sucesso!");
                 setShowEditModal(false);
                 const data = await roomService.getAll();
                 setRooms(Array.isArray(data) ? data : []);
@@ -215,17 +209,22 @@ export default function Rooms() {
         }
     };
 
-    const hasActiveFilters = typeFilter || capacityFilter || stateFilter;
+    const hasActiveFilters = typeFilter || capacityFilter || stateFilter || availableIds !== null;
 
     const clearFilters = () => {
         setSearchInput("");
         setTypeInput("");
         setCapacityInput("");
         setStateInput("");
+        setDateInput("");
+        setStartTimeInput("");
+        setEndTimeInput("");
         setSearchTerm("");
         setTypeFilter("");
         setCapacityFilter("");
         setStateFilter("");
+        setAvailableIds(null);
+        setAvailableRoomsMap({});
     };
 
     const filteredRooms = useMemo(() => {
@@ -236,9 +235,10 @@ export default function Rooms() {
             if (capacityFilter && !matchesCapacity(sala.capacity, capacityFilter))
                 return false;
             if (stateFilter && getRoomStatus(sala) !== stateFilter) return false;
+            if (availableIds !== null && !availableIds.has(String(sala.id))) return false;
             return true;
         });
-    }, [rooms, searchTerm, typeFilter, capacityFilter, stateFilter]);
+    }, [rooms, searchTerm, typeFilter, capacityFilter, stateFilter, availableIds]);
 
     // Stats from all rooms
     const stats = useMemo(() => {
@@ -306,15 +306,6 @@ export default function Rooms() {
                             : "Consulta e reserva as salas disponíveis"}
                     </p>
                 </div>
-                {isAdmin && (
-                    <button
-                        onClick={openModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
-                    >
-                        <Plus size={16} />
-                        Nova Sala
-                    </button>
-                )}
             </div>
 
             {/* Filter bar */}
@@ -380,9 +371,65 @@ export default function Rooms() {
                             <option value="EM MANUTENÇÃO">Em Manutenção</option>
                         </select>
                     </div>
+                </div>
 
-                    {/* Buttons */}
-                    <div className="flex gap-2">
+                {/* Availability row */}
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700 flex flex-wrap gap-4 items-end">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <Calendar size={13} className="text-blue-500" />
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
+                            Disponibilidade
+                        </span>
+                    </div>
+
+                    {/* Data */}
+                    <div className="min-w-[160px]">
+                        <label className={labelClass}>Data</label>
+                        <input
+                            type="date"
+                            value={dateInput}
+                            min={todayStr}
+                            onChange={(e) => {
+                                setDateInput(e.target.value);
+                                setStartTimeInput("");
+                                setEndTimeInput("");
+                            }}
+                            className={inputClass}
+                        />
+                    </div>
+
+                    {/* Hora início */}
+                    <div className="min-w-[120px]">
+                        <label className={labelClass}>Hora Início</label>
+                        <input
+                            type="time"
+                            value={startTimeInput}
+                            min={dateInput === todayStr ? nowTimeStr : undefined}
+                            onChange={(e) => setStartTimeInput(e.target.value)}
+                            className={inputClass}
+                        />
+                    </div>
+
+                    {/* Hora fim */}
+                    <div className="min-w-[120px]">
+                        <label className={labelClass}>Hora Fim</label>
+                        <input
+                            type="time"
+                            value={endTimeInput}
+                            min={dateInput === todayStr ? nowTimeStr : startTimeInput || undefined}
+                            onChange={(e) => setEndTimeInput(e.target.value)}
+                            className={inputClass}
+                        />
+                    </div>
+
+                    {availableIds !== null && (
+                        <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-xs font-semibold text-green-700 dark:text-green-400">
+                            <CheckCircle2 size={13} />
+                            {filteredRooms.length} sala{filteredRooms.length !== 1 ? "s" : ""} disponível{filteredRooms.length !== 1 ? "is" : ""}
+                        </div>
+                    )}
+
+                    <div className="flex gap-2 ml-auto">
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
@@ -393,9 +440,15 @@ export default function Rooms() {
                         )}
                         <button
                             onClick={applyFilters}
-                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                            disabled={availabilityLoading}
+                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2"
                         >
-                            Filtrar
+                            {availabilityLoading ? (
+                                <>
+                                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                    A verificar...
+                                </>
+                            ) : "Filtrar"}
                         </button>
                     </div>
                 </div>
@@ -427,7 +480,7 @@ export default function Rooms() {
                     {filteredRooms.map((sala) => (
                         <RoomCard
                             key={sala.id}
-                            room={sala}
+                            room={availableIds !== null && availableRoomsMap[String(sala.id)] ? availableRoomsMap[String(sala.id)] : sala}
                             weeklyHours={
                                 weeklyMap != null
                                     ? (weeklyMap[sala.name] ?? weeklyMap[sala.id] ?? 0)
@@ -437,12 +490,17 @@ export default function Rooms() {
                             onViewDetails={(sala) => openDetailsModal(sala)}
                             onEdit={() => openEditModal(sala)}
                             onDelete={() => handleDelete(sala.id)}
+                            availabilityDate={availableIds !== null ? dateInput : ""}
+                            availabilityStart={availableIds !== null ? startTimeInput : ""}
+                            availabilityEnd={availableIds !== null ? endTimeInput : ""}
                         />
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-16 text-gray-400 dark:text-slate-500">
-                    Nenhuma sala encontrada.
+                <div className="flex flex-col items-center justify-center py-16 gap-3 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 text-gray-400 dark:text-slate-500">
+                    <MapPin size={36} className="opacity-20" />
+                    <p className="text-sm font-medium text-gray-500 dark:text-slate-400">Nenhuma sala encontrada.</p>
+                    <p className="text-xs">Tenta ajustar os filtros ou limpa a pesquisa.</p>
                 </div>
             )}
 
@@ -648,6 +706,23 @@ export default function Rooms() {
                                 </div>
                             </div>
 
+                            {/* Tipo de Sala */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
+                                    Tipo de Sala <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={editType}
+                                    onChange={(e) => setEditType(e.target.value)}
+                                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/60 text-sm text-gray-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                                >
+                                    <option value="AULA">Sala de Aula</option>
+                                    <option value="LABORATÓRIO">Laboratório</option>
+                                    <option value="REUNIÃO">Sala de Reunião</option>
+                                    <option value="AUDITÓRIO">Auditório</option>
+                                </select>
+                            </div>
+
                             <div
                                 onClick={() => setEditProjector((v) => !v)}
                                 className="flex items-center gap-3 p-3.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/60 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors select-none"
@@ -684,109 +759,6 @@ export default function Rooms() {
                 </div>
             )}
 
-            {/* ── Modal Nova Sala ── */}
-            {showModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                    onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
-                >
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" />
-
-                    {/* Modal box */}
-                    <div className="relative w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 animate-fade-in-down">
-
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-slate-700">
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-800 dark:text-slate-100">Nova Sala</h2>
-                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Preenche os dados da nova sala</p>
-                            </div>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {/* Form */}
-                        <form onSubmit={handleCreateRoom} className="px-6 py-5 space-y-4">
-
-                            {/* Nome */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-                                    Nome da Sala <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <Type size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" />
-                                    <input
-                                        type="text"
-                                        value={modalName}
-                                        onChange={(e) => setModalName(e.target.value)}
-                                        placeholder="Ex: Laboratório de Química"
-                                        required
-                                        className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/60 text-sm text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Lotação */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-                                    Lotação Máxima <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <Users size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" />
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={modalCapacity}
-                                        onChange={(e) => setModalCapacity(e.target.value)}
-                                        placeholder="Ex: 30"
-                                        required
-                                        className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/60 text-sm text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Projetor toggle */}
-                            <div
-                                onClick={() => setModalProjector((v) => !v)}
-                                className="flex items-center gap-3 p-3.5 border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/60 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors select-none"
-                            >
-                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                                    modalProjector ? "bg-blue-600 border-blue-600" : "border-gray-300 dark:border-slate-500 bg-white dark:bg-slate-800"
-                                }`}>
-                                    {modalProjector && <Projector size={12} className="text-white" />}
-                                </div>
-                                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
-                                    Tem Projetor Disponível?
-                                </span>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-3 pt-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="flex-1 py-2.5 text-sm font-medium border border-gray-200 dark:border-slate-600 rounded-xl text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={modalLoading}
-                                    className="flex-1 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
-                                >
-                                    <Save size={15} />
-                                    {modalLoading ? "A criar..." : "Criar Sala"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </Layout>
     );
 }

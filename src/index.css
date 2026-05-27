@@ -335,6 +335,30 @@ body:where(.dark *) {
     }
 }
 
+/* Page transition — fade out antes de navegar */
+@keyframes pageExitFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes pageFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+.page-fade-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: white;
+    pointer-events: none;
+    animation: pageExitFade 0.18s ease forwards;
+}
+
+.page-fade-overlay.exit {
+    animation: pageFadeOut 0.28s ease forwards;
+}
+
 /* Fade In Down */
 @keyframes fadeInDown {
     from {
@@ -358,6 +382,30 @@ body:where(.dark *) {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Chat slide up */
+@keyframes chatSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Typing dots */
+@keyframes typingDot {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-5px);
+        opacity: 1;
     }
 }
 
@@ -787,4 +835,12 @@ body:where(.dark *) {
 /* Botão outline no dark mode */
 .dark [class*="bg-slate-800"][class*="border"] {
     background-color: #161b22 !important;
+}
+
+/* Forçar formato 24h nos inputs de hora (ignora locale do Windows) */
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+    display: none;
+}
+input[type="time"] {
+    --webkit-appearance: none;
 }

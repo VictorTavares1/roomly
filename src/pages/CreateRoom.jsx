@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Type, Users, Projector, Save } from "lucide-react";
+import { Type, Users, Projector, Save, Building2, HardHat } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
@@ -24,7 +24,7 @@ export default function CreateRoom() {
             });
 
             if (res.status === "sucesso") {
-                toast.success("Sala criada com sucesso! 🏢");
+                toast.success("Sala criada com sucesso!");
                 navigate('/rooms');
             } else {
                 toast.error(translateMessage(res.mensagem));
@@ -37,7 +37,7 @@ export default function CreateRoom() {
 
     return (
         <Layout>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8">Adicionar Nova Sala 🏗️</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8 flex items-center gap-3"><HardHat size={28} /> Adicionar Nova Sala</h1>
 
             <div className="flex justify-center items-center min-h-[50vh]">
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 w-full max-w-lg transition-colors">

@@ -4,8 +4,10 @@ export default function Input({
     placeholder,
     value,
     onChange,
-    icon: Icon, // Renomeamos para Icon (letra maiúscula) para usar como componente
+    icon: Icon,
     required = false,
+    min,
+    max,
     className = ""
 }) {
     return (
@@ -30,6 +32,8 @@ export default function Input({
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     required={required}
+                    min={min}
+                    max={max}
                 />
             </div>
         </div>

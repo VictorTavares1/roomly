@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("roomly_token");
 
         setTimeout(() => {
-            window.location.href = "/login";
+            window.location.href = "/";
         }, 100);
     };
 

@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import { Trash2, Calendar, Clock, MapPin, Search } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Trash2, Calendar, Clock, MapPin, Search, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import SearchBar from "../components/SearchBar";
-import Button from "../components/Button";
 import { reservationService } from "../services/api";
 import { translateMessage } from "../utils/translations";
 
@@ -11,15 +10,17 @@ export default function ManageReservations() {
     const [reservations, setReservations] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        fetchReservations();
-    }, []);
-
-    const fetchReservations = () => {
+    const fetchReservations = useCallback(() => {
         reservationService.getAll()
             .then((data) => setReservations(data))
             .catch((err) => console.error("Erro:", err));
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchReservations();
+        const interval = setInterval(fetchReservations, 10000);
+        return () => clearInterval(interval);
+    }, [fetchReservations]);
 
     const handleDelete = async (id) => {
         toast((t) => (
@@ -59,7 +60,15 @@ export default function ManageReservations() {
 
     return (
         <Layout>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-6">Gerir Todas as Reservas 👮‍♂️</h1>
+            <div className="mb-7">
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2.5">
+                    <ShieldCheck size={22} className="text-blue-500" />
+                    Gerir Reservas
+                </h1>
+                <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
+                    Consulta e cancela reservas de todos os utilizadores.
+                </p>
+            </div>
 
             <div className="mb-6">
                 <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Pesquisar por nome, sala, motivo..." />
@@ -86,7 +95,7 @@ export default function ManageReservations() {
                             {filteredReservations.map((reserva) => (
                                 <tr key={reserva.id} className="hover:bg-blue-50/50 dark:hover:bg-slate-700/50 transition-colors">
                                     <td className="p-4 font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold">
                                             {reserva.user_name.charAt(0).toUpperCase()}
                                         </div>
                                         {reserva.user_name}
@@ -99,7 +108,7 @@ export default function ManageReservations() {
                                     <td className="p-4 text-slate-600 dark:text-slate-400">
                                         <div className="flex flex-col text-sm">
                                             <span className="font-bold">{new Date(reserva.start_time).toLocaleDateString('pt-PT')}</span>
-                                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit flex items-center gap-1 mt-1">
+                                            <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded w-fit flex items-center gap-1 mt-1">
                                                 <Clock size={10} />
                                                 {new Date(reserva.start_time).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} - {new Date(reserva.end_time).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
@@ -107,9 +116,12 @@ export default function ManageReservations() {
                                     </td>
                                     <td className="p-4 text-gray-500 dark:text-slate-400 italic text-sm">"{reserva.purpose}"</td>
                                     <td className="p-4 text-center">
-                                        <Button variant="danger" onClick={() => handleDelete(reserva.id)} className="!p-2 !shadow-sm">
-                                            <Trash2 size={16} />
-                                        </Button>
+                                        <button
+                                            onClick={() => handleDelete(reserva.id)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                                        >
+                                            <Trash2 size={13} /> Cancelar
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

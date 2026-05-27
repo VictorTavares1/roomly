@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { User, Lock, Shield, Save, CheckCircle, AlertTriangle } from "lucide-react";
+import { User, Lock, Shield, Save } from "lucide-react";
+import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { userService, authService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
+import { getAvatarColors, getInitials } from "../utils/avatar";
 
 export default function Settings() {
     const { user, updateUser } = useAuth();
@@ -17,7 +19,6 @@ export default function Settings() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState(null);
 
     useEffect(() => {
         if (user) {
@@ -26,15 +27,10 @@ export default function Settings() {
         }
     }, [user]);
 
-    const getInitials = (n) => {
-        if (!n) return "U";
-        const names = n.split(' ');
-        return names.length === 1 ? names[0].charAt(0) : names[0].charAt(0) + names[names.length - 1].charAt(0);
-    };
+    const roleLabel = { admin: "Administrador", funcionario: "Funcionário", professor: "Professor" };
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
-        setMessage(null);
         setLoading(true);
 
         try {
@@ -45,16 +41,16 @@ export default function Settings() {
             });
 
             if (res.status === "sucesso") {
-                setMessage({ type: "success", text: "Perfil atualizado com sucesso!" });
+                toast.success("Perfil atualizado com sucesso!");
                 if (res.user) {
                     updateUser(res.user);
                 }
             } else {
-                setMessage({ type: "error", text: translateMessage(res.mensagem) });
+                toast.error(translateMessage(res.mensagem) || "Erro ao atualizar perfil.");
             }
         } catch (error) {
             console.error(error);
-            setMessage({ type: "error", text: "Erro ao atualizar perfil." });
+            toast.error("Erro ao atualizar perfil.");
         } finally {
             setLoading(false);
         }
@@ -63,10 +59,9 @@ export default function Settings() {
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMessage(null);
 
         if (newPassword !== confirmPassword) {
-            setMessage({ type: "error", text: "As novas palavras-passe não coincidem!" });
+            toast.error("As novas palavras-passe não coincidem!");
             setLoading(false);
             return;
         }
@@ -79,15 +74,15 @@ export default function Settings() {
             });
 
             if (res.status === "sucesso") {
-                setMessage({ type: "success", text: "Palavra-passe alterada! Por favor entra novamente." });
+                toast.success("Palavra-passe alterada! Por favor entra novamente.");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
-                setMessage({ type: "error", text: translateMessage(res.mensagem) });
+                toast.error(translateMessage(res.mensagem) || "Erro ao mudar palavra-passe.");
             }
         } catch (error) {
-            setMessage({ type: "error", text: "Erro ao mudar palavra-passe." });
+            toast.error("Erro ao mudar palavra-passe.");
         } finally {
             setLoading(false);
         }
@@ -120,26 +115,24 @@ export default function Settings() {
                 {/* CONTEÚDO */}
                 <div className="flex-1 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 min-h-[500px] transition-colors">
 
-                    {/* Feedback */}
-                    {message && (
-                        <div className={`p-4 mb-6 rounded-xl text-center font-medium flex items-center justify-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                            {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
-                            {message.text}
-                        </div>
-                    )}
-
                     {/* ABA PERFIL */}
                     {activeTab === "profile" && (
                         <div className="animate-fadeIn">
                             <div className="flex items-center gap-6 mb-8 border-b border-gray-100 dark:border-slate-700 pb-6">
-                                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+                                <div
+                                    className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white shrink-0 shadow-md"
+                                    style={{ background: `linear-gradient(135deg, ${getAvatarColors(user?.name)[0]}, ${getAvatarColors(user?.name)[1]})` }}
+                                >
                                     {getInitials(user?.name)}
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200">{user?.name}</h2>
-                                    <p className="text-gray-500 dark:text-slate-400">{user?.email}</p>
-                                    <span className="inline-block mt-2 px-3 py-1 bg-gray-100 dark:bg-slate-700 text-xs font-bold uppercase rounded-full text-gray-600 dark:text-slate-300">
-                                        {user?.role}
+                                    <p className="text-gray-500 dark:text-slate-400 text-sm">{user?.email}</p>
+                                    <span
+                                        className="inline-block mt-2 px-3 py-1 text-xs font-bold rounded-full text-white"
+                                        style={{ background: `linear-gradient(135deg, ${getAvatarColors(user?.name)[0]}, ${getAvatarColors(user?.name)[1]})` }}
+                                    >
+                                        {roleLabel[user?.role] || user?.role}
                                     </span>
                                 </div>
                             </div>

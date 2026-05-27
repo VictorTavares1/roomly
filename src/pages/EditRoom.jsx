@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Type, Users, Projector, Save, ArrowLeft } from "lucide-react";
+import { Type, Users, Projector, Save, ArrowLeft, Pencil, Building2 } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
@@ -19,7 +19,6 @@ export default function EditRoom() {
     const [capacity, setCapacity] = useState("");
     const [hasProjector, setHasProjector] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     useEffect(() => {
         if (!room) {
@@ -37,7 +36,6 @@ export default function EditRoom() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
 
         try {
@@ -49,14 +47,14 @@ export default function EditRoom() {
             });
 
             if (res.status === "sucesso") {
-                toast.success("Sala atualizada com sucesso! 🏢");
+                toast.success("Sala atualizada com sucesso!");
                 navigate("/rooms");
             } else {
-                setError(translateMessage(res.mensagem) || "Erro ao atualizar sala.");
+                toast.error(translateMessage(res.mensagem) || "Erro ao atualizar sala.");
             }
         } catch (err) {
             console.error("Erro:", err);
-            setError("Erro ao atualizar sala. Tenta novamente.");
+            toast.error("Erro ao atualizar sala. Tenta novamente.");
         } finally {
             setLoading(false);
         }
@@ -75,14 +73,10 @@ export default function EditRoom() {
                 </button>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8">Editar Sala ✏️</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8 flex items-center gap-3"><Pencil size={26} /> Editar Sala</h1>
 
             <div className="flex justify-center items-center min-h-[50vh]">
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 w-full max-w-lg transition-colors">
-                    {error && (
-                        <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <Input label="Nome da Sala" placeholder="Ex: Laboratório de Química" value={name} onChange={setName} icon={Type} required />
                         <Input label="Lotação Máxima" type="number" placeholder="Ex: 30" value={capacity} onChange={setCapacity} icon={Users} required />

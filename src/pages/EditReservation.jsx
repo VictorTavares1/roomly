@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Calendar, Clock, MapPin, AlignLeft, Save, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, AlignLeft, Save, ArrowLeft, Pencil, PartyPopper } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
@@ -22,7 +22,6 @@ export default function EditReservation() {
     const [endTime, setEndTime] = useState("");
     const [purpose, setPurpose] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     useEffect(() => {
         if (!reservation) {
@@ -51,11 +50,10 @@ export default function EditReservation() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
 
         if (startTime >= endTime) {
-            setError("A hora de fim tem de ser depois do início.");
+            toast.error("A hora de fim tem de ser depois do início.");
             setLoading(false);
             return;
         }
@@ -70,14 +68,14 @@ export default function EditReservation() {
             });
 
             if (res.status === "sucesso") {
-                toast.success("Reserva atualizada com sucesso! 🎉");
+                toast.success("Reserva atualizada com sucesso!");
                 navigate("/my-reservations");
             } else {
-                setError(translateMessage(res.mensagem) || "Erro ao atualizar reserva.");
+                toast.error(translateMessage(res.mensagem) || "Erro ao atualizar reserva.");
             }
         } catch (err) {
             console.error("Erro:", err);
-            setError(translateMessage(err.message) || "Erro ao atualizar reserva. Verifica se a sala não está ocupada nesse horário.");
+            toast.error(translateMessage(err.message) || "Erro ao atualizar reserva. Verifica se a sala não está ocupada nesse horário.");
         } finally {
             setLoading(false);
         }
@@ -96,14 +94,10 @@ export default function EditReservation() {
                 </button>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8">Editar Reserva ✏️</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8 flex items-center gap-3"><Pencil size={26} /> Editar Reserva</h1>
 
             <div className="max-w-xl">
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 transition-colors">
-                    {error && (
-                        <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">Sala</label>

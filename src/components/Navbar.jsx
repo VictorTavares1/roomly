@@ -1,24 +1,225 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-    Search, Bell, ChevronDown, Sun, Moon, Settings,
-    LogOut, MapPin, Calendar, PlusCircle, AlertTriangle,
+    Search, ChevronDown, Sun, Moon, Settings,
+    LogOut, MapPin, Calendar, AlertTriangle,
     ClipboardList, Wrench, Users, BookOpen, LayoutDashboard,
-    Menu, X
+    Menu, X, Building2, CalendarCheck
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "./Logo";
+import { roomService, reservationService } from "../services/api";
+import { getAvatarColors, getInitials } from "../utils/avatar";
 
-const getInitials = (name) => {
-    if (!name) return "U";
-    const parts = name.trim().split(" ");
-    return parts.length === 1
-        ? parts[0].charAt(0).toUpperCase()
-        : (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-};
+/* ─── Pesquisa Global ─── */
+function GlobalSearch() {
+    const navigate = useNavigate();
+    const [query, setQuery] = useState("");
+    const [results, setResults] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const inputRef = useRef(null);
+    const wrapperRef = useRef(null);
 
-const roleLabel = { admin: "Gestor Escolar", funcionario: "Funcionário", professor: "Professor" };
+    // Fecha ao clicar fora
+    useEffect(() => {
+        const handler = (e) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const search = useCallback(async (q) => {
+        if (!q.trim()) { setResults([]); setOpen(false); return; }
+        setLoading(true);
+        try {
+            const [rooms, reservations] = await Promise.all([
+                roomService.getAll(),
+                reservationService.getMyReservations(),
+            ]);
+
+            const ql = q.toLowerCase();
+
+            const roomHits = (rooms || [])
+                .filter(r => r.name.toLowerCase().includes(ql) || (r.type || "").toLowerCase().includes(ql))
+                .slice(0, 4)
+                .map(r => ({
+                    type: "room",
+                    id: r.id,
+                    title: r.name,
+                    sub: r.type || "Sala",
+                    status: r.status,
+                    room: r,
+                }));
+
+            const resHits = (reservations || [])
+                .filter(r =>
+                    (r.room_name || "").toLowerCase().includes(ql) ||
+                    (r.purpose || "").toLowerCase().includes(ql)
+                )
+                .slice(0, 4)
+                .map(r => ({
+                    type: "reservation",
+                    id: r.id,
+                    title: r.room_name,
+                    sub: r.purpose || "Sem motivo",
+                    date: r.start_time?.slice(0, 10),
+                    status: r.status,
+                }));
+
+            setResults([...roomHits, ...resHits]);
+            setOpen(true);
+        } catch {
+            setResults([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // Debounce 280ms
+    useEffect(() => {
+        const t = setTimeout(() => search(query), 280);
+        return () => clearTimeout(t);
+    }, [query, search]);
+
+    const handleSelect = (item) => {
+        setQuery("");
+        setOpen(false);
+        if (item.type === "room") {
+            navigate("/rooms", { state: { highlight: item.id } });
+        } else {
+            navigate("/my-reservations");
+        }
+    };
+
+    const statusBadge = {
+        disponivel:  "bg-emerald-100 text-emerald-700",
+        ocupada:     "bg-orange-100 text-orange-700",
+        em_manutencao: "bg-red-100 text-red-700",
+        confirmada:  "bg-blue-100 text-blue-700",
+        cancelada:   "bg-gray-100 text-gray-500",
+        concluida:   "bg-gray-100 text-gray-500",
+    };
+    const statusLabel = {
+        disponivel: "Disponível", ocupada: "Ocupada",
+        em_manutencao: "Manutenção", confirmada: "Confirmada",
+        cancelada: "Cancelada", concluida: "Concluída",
+    };
+
+    return (
+        <div ref={wrapperRef} className="relative hidden lg:block">
+            <div className={`flex items-center gap-2 bg-gray-50 dark:bg-slate-700/60 border rounded-xl px-3 py-2 w-60 transition-all
+                ${open ? "border-blue-400 ring-2 ring-blue-500/20" : "border-gray-200 dark:border-slate-600/60"}
+                focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/20`}>
+                <Search size={14} className={`shrink-0 transition-colors ${loading ? "text-blue-400 animate-pulse" : "text-gray-400 dark:text-slate-500"}`} />
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    onFocus={() => query && setOpen(true)}
+                    placeholder="Procurar sala ou reserva..."
+                    className="bg-transparent text-sm text-gray-600 dark:text-slate-300 placeholder-gray-400 dark:placeholder-slate-500 outline-none w-full"
+                />
+                {query && (
+                    <button onClick={() => { setQuery(""); setOpen(false); }} className="shrink-0 text-gray-300 hover:text-gray-500 transition-colors">
+                        <X size={13} />
+                    </button>
+                )}
+            </div>
+
+            {open && (
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden z-50 animate-fade-in-down">
+                    {results.length === 0 ? (
+                        <div className="px-4 py-5 text-center text-sm text-gray-400 dark:text-slate-500">
+                            Sem resultados para <span className="font-semibold text-gray-600 dark:text-slate-300">"{query}"</span>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Salas */}
+                            {results.filter(r => r.type === "room").length > 0 && (
+                                <div>
+                                    <div className="px-4 py-2 border-b border-gray-50 dark:border-slate-700">
+                                        <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Salas</span>
+                                    </div>
+                                    {results.filter(r => r.type === "room").map(item => (
+                                        <button key={`r-${item.id}`} onClick={() => handleSelect(item)}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700/60 transition-colors text-left">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                                                <Building2 size={14} className="text-blue-500" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 truncate">{item.title}</p>
+                                                <p className="text-xs text-gray-400 dark:text-slate-500">{item.sub}</p>
+                                            </div>
+                                            {item.status && (
+                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusBadge[item.status] || "bg-gray-100 text-gray-500"}`}>
+                                                    {statusLabel[item.status] || item.status}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Reservas */}
+                            {results.filter(r => r.type === "reservation").length > 0 && (
+                                <div className={results.filter(r => r.type === "room").length > 0 ? "border-t border-gray-50 dark:border-slate-700" : ""}>
+                                    <div className="px-4 py-2 border-b border-gray-50 dark:border-slate-700">
+                                        <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">As minhas reservas</span>
+                                    </div>
+                                    {results.filter(r => r.type === "reservation").map(item => (
+                                        <button key={`res-${item.id}`} onClick={() => handleSelect(item)}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700/60 transition-colors text-left">
+                                            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
+                                                <CalendarCheck size={14} className="text-emerald-500" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 truncate">{item.title}</p>
+                                                <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{item.sub}</p>
+                                            </div>
+                                            {item.status && (
+                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusBadge[item.status] || "bg-gray-100 text-gray-500"}`}>
+                                                    {statusLabel[item.status] || item.status}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="px-4 py-2.5 border-t border-gray-50 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-700/30">
+                                <p className="text-[10px] text-gray-400 dark:text-slate-500 text-center">
+                                    {results.length} resultado{results.length !== 1 ? "s" : ""} encontrado{results.length !== 1 ? "s" : ""}
+                                </p>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+const roleLabel = { admin: "Administrador", funcionario: "Funcionário", professor: "Professor" };
+
+function Avatar({ name, size = "md" }) {
+    const [from, to] = getAvatarColors(name);
+    const sizeClass = size === "md" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
+    return (
+        <div
+            className={`${sizeClass} rounded-full flex items-center justify-center shrink-0 shadow-sm font-bold text-white`}
+            style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+        >
+            {getInitials(name)}
+        </div>
+    );
+}
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -109,9 +310,7 @@ export default function Navbar() {
 
                     {/* Logo */}
                     <Link to="/dashboard" className="flex items-center gap-2 mr-3 shrink-0">
-                        <div className="bg-blue-600 p-1.5 rounded-lg">
-                            <Logo className="w-5 h-5" />
-                        </div>
+                        <Logo className="w-8 h-8" />
                         <span className="text-base font-bold text-gray-900 dark:text-white hidden sm:block tracking-tight">
                             Roomly
                         </span>
@@ -148,19 +347,8 @@ export default function Navbar() {
                     <div className="flex-1" />
 
                     {/* Search bar */}
-                    <div className="hidden lg:flex items-center gap-2 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600/60 rounded-xl px-3 py-2 w-60 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all">
-                        <Search size={14} className="text-gray-400 dark:text-slate-500 shrink-0" />
-                        <input
-                            type="text"
-                            placeholder="Procurar sala ou reserva..."
-                            className="bg-transparent text-sm text-gray-600 dark:text-slate-300 placeholder-gray-400 dark:placeholder-slate-500 outline-none w-full"
-                        />
-                    </div>
+                    <GlobalSearch />
 
-                    {/* Notification bell */}
-                    <button className="p-2 ml-1 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700/60 rounded-xl transition-colors">
-                        <Bell size={18} />
-                    </button>
 
                     {/* User avatar dropdown */}
                     <div className="relative ml-1">
@@ -172,9 +360,7 @@ export default function Navbar() {
                                     : "hover:bg-gray-100 dark:hover:bg-slate-700/60"
                                 }`}
                         >
-                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0 shadow-sm">
-                                <span className="text-xs font-bold text-white">{getInitials(user?.name)}</span>
-                            </div>
+                            <Avatar name={user?.name} size="md" />
                             <div className="hidden sm:block text-left">
                                 <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 leading-tight">
                                     {user?.name?.split(" ")[0] || "User"}
@@ -192,9 +378,15 @@ export default function Navbar() {
                         {openMenu === "user" && (
                             <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden z-50 animate-fade-in-down">
                                 {/* User info */}
-                                <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700">
-                                    <p className="text-sm font-bold text-gray-800 dark:text-slate-100">{user?.name}</p>
-                                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 truncate">{user?.email}</p>
+                                <div className="px-4 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3">
+                                    <Avatar name={user?.name} size="lg" />
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-gray-800 dark:text-slate-100 truncate">{user?.name}</p>
+                                        <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{user?.email}</p>
+                                        <span className="text-[10px] font-semibold mt-0.5 inline-block" style={{ color: getAvatarColors(user?.name)[0] }}>
+                                            {roleLabel[user?.role] || user?.role}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div className="py-1">

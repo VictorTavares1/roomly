@@ -10,12 +10,10 @@ import Rooms from './pages/Rooms';
 import MyReservations from './pages/MyReservations';
 import NewReservation from './pages/NewReservation';
 import Settings from './pages/Settings';
-import MyReports from './pages/MyReports';
 import RoomDetail from './pages/RoomDetail';
 
 // Páginas de Admin
-import CreateRoom from './pages/CreateRoom';
-import EditRoom from './pages/EditRoom';
+import ManageRooms from './pages/ManageRooms';
 import ManageUsers from './pages/ManageUsers';
 import ManageReservations from './pages/ManageReservations';
 import EditReservation from './pages/EditReservation';
@@ -56,16 +54,15 @@ export default function App() {
       <Route path="/edit-reservation" element={<PrivateRoute><EditReservation /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
-      {/* Reportar Problemas (qualquer user logado) */}
+      {/* Suporte técnico — my-reports redireciona para a página unificada */}
       <Route path="/report-issue" element={<PrivateRoute><ReportIssue /></PrivateRoute>} />
-      <Route path="/my-reports" element={<PrivateRoute><MyReports /></PrivateRoute>} />
+      <Route path="/my-reports" element={<Navigate to="/report-issue" replace />} />
 
       {/* Manutenção (admin + funcionário) */}
       <Route path="/manage-reports" element={<StaffRoute><ManageReports /></StaffRoute>} />
 
       {/* Rotas de Admin (só admin) */}
-      <Route path="/create-room" element={<AdminRoute><CreateRoom /></AdminRoute>} />
-      <Route path="/edit-room" element={<AdminRoute><EditRoom /></AdminRoute>} />
+      <Route path="/manage-rooms" element={<AdminRoute><ManageRooms /></AdminRoute>} />
       <Route path="/manage-users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
       <Route path="/manage-reservations" element={<AdminRoute><ManageReservations /></AdminRoute>} />
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     Calendar, ShieldAlert, Clock, Activity,
@@ -145,9 +145,8 @@ export default function Dashboard() {
         reported_problems: 0,
         chart_data: [], recent_activities: [],
     });
-    useEffect(() => {
+    const fetchStats = useCallback(() => {
         if (!user?.id) return;
-
         dashboardService.getStats()
             .then((data) => {
                 if (!data.error) {
@@ -160,6 +159,12 @@ export default function Dashboard() {
             .catch(() => { });
     }, [user]);
 
+    useEffect(() => {
+        fetchStats();
+        const interval = setInterval(fetchStats, 10000);
+        return () => clearInterval(interval);
+    }, [fetchStats]);
+
     const maxReservas = Math.max(...(stats.chart_data || []).map(r => r.reservas), 1);
 
     return (
@@ -169,7 +174,7 @@ export default function Dashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
-                            Olá, {user?.name?.split(" ")[0] || "Visitante"}! 👋
+                            Olá, {user?.name?.split(" ")[0] || "Visitante"}!
                         </h1>
                         <p className="text-sm text-gray-400 dark:text-slate-500 mt-0.5">
                             {new Date().toLocaleDateString("pt-PT", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
@@ -285,12 +290,6 @@ export default function Dashboard() {
                         )}
                     </div>
 
-                    <button
-                        onClick={() => navigate("/my-reservations")}
-                        className="mt-4 w-full py-2.5 text-sm font-medium text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                        Ver Histórico Completo
-                    </button>
                 </div>
             </div>
 

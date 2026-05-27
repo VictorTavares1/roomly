@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-import { Trash2, UserPlus, X, ShieldAlert, Briefcase, BookOpen, RotateCcw } from "lucide-react";
+import { Trash2, UserPlus, X, ShieldAlert, Briefcase, BookOpen, RotateCcw, Users, Mail, Lock, Save, User } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
-import Button from "../components/Button";
-import Input from "../components/Input";
-import Select from "../components/Select";
 import { userService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
@@ -82,25 +79,119 @@ export default function ManageUsers() {
 
     return (
         <Layout>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-6">Gerir Utilizadores 👥</h1>
-
-            <div className="mb-6 flex justify-end">
-                <Button variant={showForm ? "danger" : "primary"} onClick={() => setShowForm(!showForm)}>
-                    {showForm ? <><X size={20} /> Cancelar</> : <><UserPlus size={20} /> Novo Utilizador</>}
-                </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2.5">
+                        <Users size={22} className="text-blue-500" />
+                        Gerir Utilizadores
+                    </h1>
+                    <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
+                        Cria, edita e gere os utilizadores da plataforma.
+                    </p>
+                </div>
+                <button
+                    onClick={() => setShowForm(!showForm)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110 active:scale-95 shrink-0"
+                    style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}
+                >
+                    {showForm ? <><X size={16} /> Cancelar</> : <><UserPlus size={16} /> Novo Utilizador</>}
+                </button>
             </div>
 
             {showForm && (
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 mb-8 animate-fade-in transition-colors">
-                    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Nome" value={formData.name} onChange={(v) => setFormData({ ...formData, name: v })} required />
-                        <Input label="Email" type="email" value={formData.email} onChange={(v) => setFormData({ ...formData, email: v })} required />
-                        <Input label="Palavra-passe" type="password" value={formData.password} onChange={(v) => setFormData({ ...formData, password: v })} required />
-                        <Select label="Cargo" value={formData.role} onChange={(v) => setFormData({ ...formData, role: v })}
-                            options={[{ id: 'professor', name: 'Professor' }, { id: 'funcionario', name: 'Funcionário' }, { id: 'admin', name: 'Admin' }]}
-                        />
-                        <div className="md:col-span-2 pt-2">
-                            <Button type="submit" variant="success" className="w-full">Confirmar Criação</Button>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden mb-5"
+                    style={{ animation: "chatSlideUp 0.2s ease both" }}>
+
+                    {/* Header do formulário */}
+                    <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <UserPlus size={14} className="text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-800 dark:text-slate-100">Novo Utilizador</p>
+                                <p className="text-xs text-gray-400 dark:text-slate-500">Preenche os dados para criar o acesso institucional</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowForm(false)} className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                            <X size={14} />
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleCreate} className="p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        {/* Nome */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nome completo</label>
+                            <div className="relative">
+                                <User size={14} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="Ex: Ana Sousa"
+                                    required
+                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Email institucional</label>
+                            <div className="relative">
+                                <Mail size={14} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    placeholder="Ex: ana.sousa@escola.pt"
+                                    required
+                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Palavra-passe */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Palavra-passe</label>
+                            <div className="relative">
+                                <Lock size={14} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                    placeholder="Mínimo 6 caracteres"
+                                    required
+                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Cargo */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Cargo</label>
+                            <select
+                                value={formData.role}
+                                onChange={e => setFormData({ ...formData, role: e.target.value })}
+                                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                            >
+                                <option value="professor">Professor</option>
+                                <option value="funcionario">Funcionário</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+
+                        {/* Botões */}
+                        <div className="xl:col-span-4 flex justify-end gap-3">
+                            <button type="button" onClick={() => setShowForm(false)}
+                                className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110 active:scale-95"
+                                style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}>
+                                <Save size={14} /> Criar Utilizador
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -113,7 +204,7 @@ export default function ManageUsers() {
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                         {users.map((u) => {
-                            const isMe = currentUser && u.id === currentUser.id;
+                            const isMe = currentUser && Number(u.id) === Number(currentUser.id);
                             const isInactive = u.is_active == 0;
                             return (
                                 <tr key={u.id} className={isInactive ? "bg-gray-50 dark:bg-slate-900 opacity-60 grayscale" : "hover:bg-gray-50 dark:hover:bg-slate-700/50"}>
@@ -125,21 +216,38 @@ export default function ManageUsers() {
                                     </td>
                                     <td className="p-4 text-gray-500 dark:text-slate-400">{u.email}</td>
                                     <td className="p-4">
-                                        <select
-                                            value={u.role}
-                                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                                            disabled={isMe || isInactive}
-                                            className="bg-transparent font-bold text-sm outline-none cursor-pointer disabled:cursor-not-allowed text-slate-600 dark:text-slate-300"
-                                        >
-                                            <option value="professor">Professor</option>
-                                            <option value="funcionario">Funcionário</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
+                                        {isMe ? (
+                                            <span className="text-sm font-bold text-gray-400 dark:text-slate-500 select-none">
+                                                {u.role === "admin" ? "Admin" : u.role === "funcionario" ? "Funcionário" : "Professor"}
+                                            </span>
+                                        ) : (
+                                            <select
+                                                value={u.role}
+                                                onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                                disabled={isInactive}
+                                                className="bg-transparent font-bold text-sm outline-none cursor-pointer disabled:cursor-not-allowed text-slate-600 dark:text-slate-300"
+                                            >
+                                                <option value="professor">Professor</option>
+                                                <option value="funcionario">Funcionário</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        )}
                                     </td>
                                     <td className="p-4 text-center">
-                                        <Button variant={isInactive ? "success" : "danger"} onClick={() => handleToggleStatus(u)} disabled={isMe} className="!p-2 !rounded-full !w-10 !h-10 mx-auto">
-                                            {isInactive ? <RotateCcw size={18} /> : <Trash2 size={18} />}
-                                        </Button>
+                                        {isMe ? (
+                                            <span className="text-xs text-gray-300 dark:text-slate-600 select-none">—</span>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleToggleStatus(u)}
+                                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                                    isInactive
+                                                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                                                        : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50"
+                                                }`}
+                                            >
+                                                {isInactive ? <><RotateCcw size={13} /> Ativar</> : <><Trash2 size={13} /> Desativar</>}
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             );
