@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Bot, User, Sparkles, MessageCircle } from "lucide-react";
+import { X, Send, Bot, MessageSquare } from "lucide-react";
 import { reservationService } from "../services/api";
 import toast from "react-hot-toast";
 
@@ -29,7 +29,7 @@ async function sendMessage(message, history) {
 export default function AssistantChat() {
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: "assistant", text: "Olá! Sou o teu assistente de reservas 👋\n\nPodes dizer-me coisas como:\n• \"Reserva a Sala 1 amanhã das 10h às 11h para reunião\"\n• \"Que salas estão disponíveis de manhã?\"\n• \"Existe alguma sala com projetor disponível?\"" }
+        { role: "assistant", text: "Olá! Sou o teu assistente de reservas.\n\nPodes dizer-me coisas como:\n• \"Reserva a Sala 1 amanhã das 10h às 11h para reunião\"\n• \"Que salas estão disponíveis de manhã?\"\n• \"Existe alguma sala com projetor disponível?\"" }
     ]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
@@ -101,60 +101,43 @@ export default function AssistantChat() {
 
     return (
         <>
-            {/* ── JANELA FLUTUANTE ── */}
+            {/* ── JANELA ── */}
             {open && (
-                <div className="fixed bottom-24 right-6 z-50 w-[340px] flex flex-col gap-1"
-                    style={{ animation: "chatSlideUp 0.3s cubic-bezier(0.16,1,0.3,1) both" }}>
+                <div className="fixed bottom-20 right-6 z-50 w-[340px] flex flex-col bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden">
 
-                    {/* Header pill */}
-                    <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-gray-100 dark:border-slate-700 mb-1">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700">
                         <div className="flex items-center gap-2.5">
-                            <div className="relative">
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                                    style={{ background: "linear-gradient(135deg, #1e66ff, #6366f1)" }}>
-                                    <Sparkles size={14} className="text-white" />
-                                </div>
-                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-800" />
+                            <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
+                                <Bot size={14} className="text-white" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-800 dark:text-slate-100 leading-none">Assistente Roomly</p>
-                                <p className="text-[10px] text-emerald-500 font-medium mt-0.5">Online · IA</p>
+                                <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 leading-none">Assistente</p>
+                                <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">Roomly IA</p>
                             </div>
                         </div>
                         <button
                             onClick={() => setOpen(false)}
-                            className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
                         >
-                            <X size={14} />
+                            <X size={16} />
                         </button>
                     </div>
 
-                    {/* Mensagens — flutuam sem moldura */}
-                    <div className="flex flex-col gap-2 max-h-[380px] overflow-y-auto px-1 py-1 custom-scrollbar">
+                    {/* Mensagens */}
+                    <div className="flex flex-col gap-3 h-[340px] overflow-y-auto px-4 py-4 custom-scrollbar">
                         {messages.map((msg, i) => (
-                            <div key={i} className={`flex items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-                                style={{ animation: "chatSlideUp 0.2s ease both" }}>
-
-                                {/* Avatar */}
-                                <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mb-0.5 ${
-                                    msg.role === "assistant"
-                                        ? "shadow-sm"
-                                        : "bg-gray-200 dark:bg-slate-600"
-                                }`}
-                                style={msg.role === "assistant" ? { background: "linear-gradient(135deg, #1e66ff, #6366f1)" } : {}}>
-                                    {msg.role === "assistant"
-                                        ? <Bot size={13} className="text-white" />
-                                        : <User size={13} className="text-gray-600 dark:text-slate-300" />
-                                    }
+                            <div key={i} className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                                    msg.role === "assistant" ? "bg-blue-500" : "bg-gray-200 dark:bg-slate-600"
+                                }`}>
+                                    <Bot size={11} className={msg.role === "assistant" ? "text-white" : "text-gray-500 dark:text-slate-300"} />
                                 </div>
-
-                                {/* Bubble */}
-                                <div className={`px-3.5 py-2.5 rounded-2xl text-sm max-w-[82%] leading-relaxed whitespace-pre-line shadow-sm ${
+                                <div className={`px-3 py-2 rounded-xl text-sm max-w-[80%] leading-relaxed whitespace-pre-line ${
                                     msg.role === "assistant"
-                                        ? "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-bl-sm border border-gray-100 dark:border-slate-700"
-                                        : "text-white rounded-br-sm"
-                                }`}
-                                style={msg.role === "user" ? { background: "linear-gradient(135deg, #1e66ff, #6366f1)" } : {}}>
+                                        ? "bg-gray-50 dark:bg-slate-700 text-gray-700 dark:text-slate-200"
+                                        : "bg-blue-500 text-white"
+                                }`}>
                                     {msg.text}
                                 </div>
                             </div>
@@ -162,12 +145,11 @@ export default function AssistantChat() {
 
                         {/* Typing indicator */}
                         {loading && (
-                            <div className="flex items-end gap-2">
-                                <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-                                    style={{ background: "linear-gradient(135deg, #1e66ff, #6366f1)" }}>
-                                    <Bot size={13} className="text-white" />
+                            <div className="flex gap-2">
+                                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+                                    <Bot size={11} className="text-white" />
                                 </div>
-                                <div className="px-3.5 py-3 rounded-2xl rounded-bl-sm bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm flex items-center gap-1">
+                                <div className="px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 flex items-center gap-1">
                                     {[0, 0.2, 0.4].map((delay, i) => (
                                         <span key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-slate-400"
                                             style={{ animation: `typingDot 1.2s ease-in-out ${delay}s infinite` }} />
@@ -178,8 +160,8 @@ export default function AssistantChat() {
                         <div ref={bottomRef} />
                     </div>
 
-                    {/* Input pill */}
-                    <div className="flex items-center gap-2 mt-1 px-3 py-2.5 rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-gray-100 dark:border-slate-700">
+                    {/* Input */}
+                    <div className="flex items-center gap-2 px-3 py-3 border-t border-gray-100 dark:border-slate-700">
                         <input
                             ref={inputRef}
                             type="text"
@@ -187,13 +169,12 @@ export default function AssistantChat() {
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Escreve uma mensagem..."
-                            className="flex-1 text-sm bg-transparent outline-none text-slate-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500"
+                            className="flex-1 text-sm bg-transparent outline-none text-gray-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500"
                         />
                         <button
                             onClick={handleSend}
                             disabled={!input.trim() || loading}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 active:scale-95"
-                            style={{ background: "linear-gradient(135deg, #1e66ff, #6366f1)" }}
+                            className="w-8 h-8 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                         >
                             <Send size={13} className="text-white" />
                         </button>
@@ -204,14 +185,9 @@ export default function AssistantChat() {
             {/* ── BOTÃO FLUTUANTE ── */}
             <button
                 onClick={() => setOpen(v => !v)}
-                className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 pl-4 pr-5 h-12 rounded-full text-white text-sm font-semibold shadow-xl transition-all hover:brightness-110 hover:-translate-y-0.5 active:scale-95"
-                style={{ background: "linear-gradient(135deg, #1e66ff, #6366f1)",
-                    boxShadow: "0 8px 28px rgba(30,102,255,0.40)" }}
+                className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg flex items-center justify-center transition-colors"
             >
-                {open
-                    ? <X size={17} />
-                    : <><Sparkles size={15} /> Assistente</>
-                }
+                {open ? <X size={18} /> : <MessageSquare size={18} />}
             </button>
         </>
     );
