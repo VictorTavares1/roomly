@@ -99,7 +99,7 @@ export default function RoomDetail() {
                 </div>
 
                 {/* Info grid */}
-                <div className="grid grid-cols-2 gap-4 mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                     {/* Capacidade */}
                     <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
                         <div className="flex items-center gap-2 mb-2">

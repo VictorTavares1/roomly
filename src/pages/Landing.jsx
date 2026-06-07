@@ -322,7 +322,7 @@ export default function Landing() {
 
       {/* ── NAVBAR ── */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ background: `linear-gradient(135deg, ${BLUE}, ${BLUE_LIGHT})` }}>
@@ -354,7 +354,7 @@ export default function Landing() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative pt-32 pb-24 px-6 overflow-hidden">
+      <section className="relative pt-28 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 overflow-hidden">
         <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(30,102,255,0.06) 0%, transparent 70%)",
             transform: "translate(30%, -30%)" }} />
@@ -412,7 +412,7 @@ export default function Landing() {
             </div>
 
             {/* Dashboard mock 3D */}
-            <div className="flex-1 w-full max-w-[520px]">
+            <div className="flex-1 w-full max-w-[520px] hidden lg:block">
               <DashboardMock tilt="right" />
             </div>
           </div>
@@ -420,9 +420,9 @@ export default function Landing() {
       </section>
 
       {/* ── STATS BAR ── */}
-      <section className="py-10 border-y border-gray-100"
+      <section className="py-8 sm:py-10 border-y border-gray-100"
         style={{ background: "linear-gradient(90deg, #f0f6ff 0%, #f8fbff 100%)" }}>
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
           {[
             { val: "100%", label: "Conflitos eliminados" },
             { val: "24/7", label: "Disponibilidade online" },
@@ -438,7 +438,7 @@ export default function Landing() {
       </section>
 
       {/* ── FUNCIONALIDADES ── */}
-      <section id="funcionalidades" className="py-24 px-6">
+      <section id="funcionalidades" className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <Badge>Funcionalidades</Badge>
@@ -482,7 +482,7 @@ export default function Landing() {
       </section>
 
       {/* ── COMO FUNCIONA ── */}
-      <section id="como-funciona" className="py-24 px-6">
+      <section id="como-funciona" className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-16">
 
           {/* Steps */}
@@ -508,14 +508,14 @@ export default function Landing() {
           </div>
 
           {/* Reservation form mock 3D */}
-          <div className="flex-1 w-full max-w-[380px]">
+          <div className="flex-1 w-full max-w-[380px] hidden lg:block">
             <ReservationMock tilt="left" />
           </div>
         </div>
       </section>
 
       {/* ── PERFIS DE ACESSO ── */}
-      <section id="perfis" className="py-24 px-6"
+      <section id="perfis" className="py-16 sm:py-24 px-4 sm:px-6"
         style={{ background: "linear-gradient(160deg, #f8faff 0%, #eef4ff 100%)" }}>
         <div className="max-w-5xl mx-auto text-center">
           <Badge>Perfis de Acesso</Badge>
@@ -584,7 +584,7 @@ export default function Landing() {
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section className="py-24 px-6">
+      <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <div className="relative rounded-3xl overflow-hidden py-16 px-8"
             style={{ background: `linear-gradient(135deg, ${BLUE} 0%, ${BLUE_LIGHT} 100%)`,
@@ -615,7 +615,7 @@ export default function Landing() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-gray-100 py-7 px-6">
+      <footer className="border-t border-gray-100 py-7 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"

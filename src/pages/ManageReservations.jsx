@@ -74,7 +74,43 @@ export default function ManageReservations() {
                 <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Pesquisar por nome, sala, motivo..." />
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="lg:hidden flex flex-col gap-3">
+                {filteredReservations.length === 0 ? (
+                    <div className="p-12 text-center text-gray-400 dark:text-slate-500 flex flex-col items-center gap-4 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700">
+                        <Search size={48} className="opacity-20" />
+                        <p>Nenhuma reserva encontrada.</p>
+                    </div>
+                ) : filteredReservations.map((reserva) => (
+                    <div key={reserva.id} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold">
+                                    {reserva.user_name.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="font-semibold text-sm text-slate-700 dark:text-slate-300">{reserva.user_name}</span>
+                            </div>
+                            <button onClick={() => handleDelete(reserva.id)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-50 dark:bg-red-900/30 text-red-500 hover:bg-red-100 transition-colors">
+                                <Trash2 size={12} /> Cancelar
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400">
+                            <MapPin size={13} className="text-gray-400 shrink-0" /> {reserva.room_name}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                            <span className="font-bold text-gray-700 dark:text-slate-300">{new Date(reserva.start_time).toLocaleDateString('pt-PT')}</span>
+                            <span className="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded flex items-center gap-1">
+                                <Clock size={10} />
+                                {new Date(reserva.start_time).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} - {new Date(reserva.end_time).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 italic">"{reserva.purpose}"</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden lg:block bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
                 {filteredReservations.length === 0 ? (
                     <div className="p-12 text-center text-gray-400 dark:text-slate-500 flex flex-col items-center gap-4">
                         <Search size={48} className="opacity-20" />

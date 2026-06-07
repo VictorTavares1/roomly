@@ -92,10 +92,10 @@ export default function Settings() {
         <Layout>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-6">Definições </h1>
 
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-6">
 
                 {/* MENU LATERAL */}
-                <div className="w-full lg:w-64 flex flex-col gap-2">
+                <div className="w-full lg:w-56 flex flex-col gap-2 lg:shrink-0">
                     <button
                         onClick={() => setActiveTab("profile")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-left
@@ -113,7 +113,7 @@ export default function Settings() {
                 </div>
 
                 {/* CONTEÚDO */}
-                <div className="flex-1 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 min-h-[500px] transition-colors">
+                <div className="flex-1 bg-white dark:bg-slate-800 p-5 md:p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 min-h-[400px] transition-colors overflow-hidden">
 
                     {/* ABA PERFIL */}
                     {activeTab === "profile" && (

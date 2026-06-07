@@ -138,7 +138,7 @@ export default function RoomCard({
             )}
 
             {/* Action buttons */}
-            <div className="flex gap-2 mt-auto pt-1">
+            <div className="flex flex-col sm:flex-row gap-2 mt-auto pt-1">
                 <button
                     onClick={() => onViewDetails ? onViewDetails(room) : null}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium border border-gray-200 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"

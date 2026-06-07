@@ -174,9 +174,9 @@ export default function ManageRooms() {
                         </button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <form onSubmit={handleSubmit} className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Nome */}
-                        <div className="xl:col-span-2">
+                        <div className="lg:col-span-2">
                             <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                                 Nome da sala
                             </label>
@@ -227,7 +227,7 @@ export default function ManageRooms() {
                         </div>
 
                         {/* Projetor + botões */}
-                        <div className="xl:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="lg:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <button
                                 type="button"
                                 onClick={() => setForm(f => ({ ...f, has_projector: !f.has_projector }))}

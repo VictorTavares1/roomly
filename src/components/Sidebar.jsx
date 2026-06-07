@@ -4,8 +4,9 @@ import {
     LayoutDashboard, MapPin, Calendar, AlertTriangle,
     Wrench, Users, BookOpen, Settings,
     LogOut, Sun, Moon, Search, X, Menu, ChevronRight,
-    Building2, CalendarCheck
+    Building2, CalendarCheck, Download
 } from "lucide-react";
+import { usePWAInstall } from "../hooks/usePWAInstall";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "./Logo";
@@ -225,6 +226,7 @@ const roleLabel = { admin: "Administrador", funcionario: "Funcionário", profess
 function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { canInstall, install } = usePWAInstall();
     const isAdmin = user?.role === "admin";
     const isStaff = user?.role === "admin" || user?.role === "funcionario";
     const [from] = getAvatarColors(user?.name || "");
@@ -297,6 +299,27 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
 
             {/* Bottom */}
             <div className={`shrink-0 py-3 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5 ${collapsed ? "px-1.5" : "px-1.5"}`}>
+
+                {/* Instalar PWA */}
+                {canInstall && (
+                    <div className="relative group/install">
+                        <button
+                            onClick={install}
+                            className={`w-full flex items-center rounded-xl text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all
+                                ${collapsed ? "justify-center px-0 py-2.5 mx-1" : "gap-3 px-3 py-2.5"}`}
+                        >
+                            <Download size={17} className="shrink-0" />
+                            {!collapsed && <span>Instalar App</span>}
+                        </button>
+                        {collapsed && (
+                            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-slate-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover/install:opacity-100 transition-opacity pointer-events-none z-50">
+                                Instalar App
+                                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900 dark:border-r-slate-700" />
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Theme */}
                 <div className="relative group/theme">
                     <button
@@ -367,12 +390,23 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
     );
 }
 
+const mq = typeof window !== "undefined" ? window.matchMedia("(min-width: 1024px)") : null;
+
 export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem("sidebar_collapsed") === "true");
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(() => mq ? mq.matches : false);
     const location = useLocation();
 
     useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+    useEffect(() => {
+        if (!mq) return;
+        setIsDesktop(mq.matches);
+        const handler = (e) => setIsDesktop(e.matches);
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
 
     const toggleCollapse = () => {
         setCollapsed(v => {
@@ -385,14 +419,17 @@ export default function Sidebar() {
     return (
         <>
             {/* Desktop */}
-            <aside
-                className={`hidden md:flex flex-col shrink-0 h-screen sticky top-0 bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-700/60 shadow-sm transition-all duration-300 ease-in-out z-30 ${collapsed ? "w-16" : "w-60"}`}
-            >
-                <SidebarContent collapsed={collapsed} onToggleCollapse={toggleCollapse} />
-            </aside>
+            {isDesktop && (
+                <aside
+                    className={`flex flex-col shrink-0 h-screen sticky top-0 bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-700/60 shadow-sm transition-all duration-300 ease-in-out z-30 ${collapsed ? "w-16" : "w-60"}`}
+                >
+                    <SidebarContent collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+                </aside>
+            )}
 
             {/* Mobile top bar */}
-            <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-700/60 shadow-sm transition-colors duration-300">
+            {!isDesktop && (
+            <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-700/60 shadow-sm transition-colors duration-300">
                 <div className="flex items-center gap-2">
                     <Logo className="w-7 h-7" />
                     <span className="text-base font-bold text-gray-900 dark:text-white">Roomly</span>
@@ -404,15 +441,16 @@ export default function Sidebar() {
                     <Menu size={20} />
                 </button>
             </header>
+            )}
 
             {/* Mobile drawer */}
             {mobileOpen && (
                 <>
                     <div
-                        className="md:hidden fixed inset-0 z-50 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
                         onClick={() => setMobileOpen(false)}
                     />
-                    <div className="md:hidden fixed top-0 left-0 z-50 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl animate-slide-in-left">
+                    <div className="fixed top-0 left-0 z-50 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl animate-slide-in-left">
                         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-slate-700/60 shrink-0">
                             <div className="flex items-center gap-2">
                                 <Logo className="w-7 h-7" />

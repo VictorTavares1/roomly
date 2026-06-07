@@ -191,7 +191,7 @@ export default function Dashboard() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7 stagger-children">
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 mb-7 stagger-children">
                 <StatCard
                     icon={DoorOpen}
                     label="Salas Disponíveis"
@@ -225,7 +225,7 @@ export default function Dashboard() {
             </div>
 
             {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
 
                 {/* Salas Populares */}
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-6 animate-fade-in-up">

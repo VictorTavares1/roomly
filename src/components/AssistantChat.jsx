@@ -3,7 +3,7 @@ import { X, Send, Bot, MessageSquare } from "lucide-react";
 import { reservationService } from "../services/api";
 import toast from "react-hot-toast";
 
-const API_BASE = "http://127.0.0.1/Roomly/roomly_api";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1/Roomly/roomly_api";
 
 function getToken() {
     return localStorage.getItem("roomly_token");
@@ -103,7 +103,7 @@ export default function AssistantChat() {
         <>
             {/* ── JANELA ── */}
             {open && (
-                <div className="fixed bottom-20 right-6 z-50 w-[340px] flex flex-col bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden">
+                <div className="fixed bottom-20 right-4 lg:right-6 z-50 w-[calc(100vw-32px)] max-w-[340px] flex flex-col bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden">
 
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700">
@@ -185,7 +185,7 @@ export default function AssistantChat() {
             {/* ── BOTÃO FLUTUANTE ── */}
             <button
                 onClick={() => setOpen(v => !v)}
-                className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg flex items-center justify-center transition-colors"
+                className="fixed bottom-6 right-4 lg:right-6 z-50 w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg flex items-center justify-center transition-colors"
             >
                 {open ? <X size={18} /> : <MessageSquare size={18} />}
             </button>

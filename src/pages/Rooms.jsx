@@ -309,10 +309,10 @@ export default function Rooms() {
             </div>
 
             {/* Filter bar */}
-            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5 mb-5 shadow-sm">
-                <div className="flex flex-wrap gap-4 items-end">
+            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-4 mb-5 shadow-sm">
+                <div className="flex flex-wrap gap-3 items-end">
                     {/* Search */}
-                    <div className="flex-1 min-w-[160px]">
+                    <div className="flex-1 min-w-[140px]">
                         <label className={labelClass}>Pesquisar</label>
                         <div className="flex items-center gap-2 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700/60 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all">
                             <Search size={13} className="text-gray-400 dark:text-slate-500 shrink-0" />
@@ -326,7 +326,7 @@ export default function Rooms() {
                     </div>
 
                     {/* Tipo de Sala */}
-                    <div className="min-w-[160px]">
+                    <div className="min-w-[140px] flex-1 sm:flex-none">
                         <label className={labelClass}>Tipo de Sala</label>
                         <select
                             value={typeInput}
@@ -342,7 +342,7 @@ export default function Rooms() {
                     </div>
 
                     {/* Capacidade */}
-                    <div className="min-w-[150px]">
+                    <div className="min-w-[140px] flex-1 sm:flex-none">
                         <label className={labelClass}>Capacidade</label>
                         <select
                             value={capacityInput}
@@ -358,7 +358,7 @@ export default function Rooms() {
                     </div>
 
                     {/* Estado */}
-                    <div className="min-w-[160px]">
+                    <div className="min-w-[140px] flex-1 sm:flex-none">
                         <label className={labelClass}>Estado</label>
                         <select
                             value={stateInput}
@@ -374,7 +374,7 @@ export default function Rooms() {
                 </div>
 
                 {/* Availability row */}
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700 flex flex-wrap gap-4 items-end">
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700 flex flex-wrap gap-3 items-end">
                     <div className="flex items-center gap-1.5 shrink-0">
                         <Calendar size={13} className="text-blue-500" />
                         <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
@@ -383,7 +383,7 @@ export default function Rooms() {
                     </div>
 
                     {/* Data */}
-                    <div className="min-w-[160px]">
+                    <div className="min-w-[140px] flex-1 sm:flex-none">
                         <label className={labelClass}>Data</label>
                         <input
                             type="date"
@@ -399,7 +399,7 @@ export default function Rooms() {
                     </div>
 
                     {/* Hora início */}
-                    <div className="min-w-[120px]">
+                    <div className="min-w-[110px] flex-1 sm:flex-none">
                         <label className={labelClass}>Hora Início</label>
                         <input
                             type="time"
@@ -411,7 +411,7 @@ export default function Rooms() {
                     </div>
 
                     {/* Hora fim */}
-                    <div className="min-w-[120px]">
+                    <div className="min-w-[110px] flex-1 sm:flex-none">
                         <label className={labelClass}>Hora Fim</label>
                         <input
                             type="time"
@@ -476,7 +476,7 @@ export default function Rooms() {
 
             {/* Room grid */}
             {filteredRooms.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredRooms.map((sala) => (
                         <RoomCard
                             key={sala.id}

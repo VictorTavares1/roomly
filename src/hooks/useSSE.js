@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const API_BASE = "http://127.0.0.1/Roomly/roomly_api/api";
+const API_BASE = (import.meta.env.VITE_API_BASE || "http://127.0.0.1/Roomly/roomly_api") + "/api";
 
 /**
  * Hook que abre uma ligação SSE e chama onUpdate(changedEntities[])

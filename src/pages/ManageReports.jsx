@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, CheckCircle, CheckCircle2, Clock, MapPin, User, Wrench, ClipboardList, ImageIcon, X } from "lucide-react";
 
-const API_BASE = "http://127.0.0.1/Roomly/roomly_api";
 import toast from "react-hot-toast";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1/Roomly/roomly_api";
 import Layout from "../components/Layout";
 import { reportService } from "../services/api";
 

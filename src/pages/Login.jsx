@@ -135,7 +135,7 @@ export default function Login() {
       </div>
 
       {/* ── LADO DIREITO ── */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-white px-8 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-10 sm:py-12 min-w-0">
 
         {/* Logo mobile */}
         <div className="flex md:hidden flex-col items-center mb-8 gap-3">

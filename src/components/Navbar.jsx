@@ -349,7 +349,6 @@ export default function Navbar() {
                     {/* Search bar */}
                     <GlobalSearch />
 
-
                     {/* User avatar dropdown */}
                     <div className="relative ml-1">
                         <button

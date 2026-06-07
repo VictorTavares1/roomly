@@ -127,10 +127,10 @@ export default function ReportIssue() {
             </div>
 
             {/* Layout principal — formulário + histórico */}
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
                 {/* ── FORMULÁRIO ── */}
-                <div className="xl:col-span-2">
+                <div className="lg:col-span-2">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
                         {/* Header do card */}
                         <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3">
@@ -235,7 +235,7 @@ export default function ReportIssue() {
                 </div>
 
                 {/* ── HISTÓRICO ── */}
-                <div className="xl:col-span-3">
+                <div className="lg:col-span-3">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
                         {/* Header */}
                         <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">

@@ -144,10 +144,10 @@ export default function NewReservation() {
                 <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">Preenche os detalhes e confirma a disponibilidade antes de reservar.</p>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
                 {/* ── FORMULÁRIO ── */}
-                <div className="xl:col-span-2 flex flex-col gap-4">
+                <div className="lg:col-span-2 flex flex-col gap-4">
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
 
@@ -279,7 +279,7 @@ export default function NewReservation() {
                 </div>
 
                 {/* ── TIMELINE ── */}
-                <div className="xl:col-span-3 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-6 h-fit">
+                <div className="col-span-1 lg:col-span-3 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-4 md:p-6 h-fit overflow-hidden">
                     <DayTimeline
                         roomId={roomId || null}
                         date={date || null}

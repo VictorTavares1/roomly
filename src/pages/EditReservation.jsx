@@ -97,7 +97,7 @@ export default function EditReservation() {
             <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-200 mb-8 flex items-center gap-3"><Pencil size={26} /> Editar Reserva</h1>
 
             <div className="max-w-xl">
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 transition-colors">
+                <div className="bg-white dark:bg-slate-800 p-5 sm:p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 transition-colors">
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">Sala</label>

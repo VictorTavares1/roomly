@@ -118,7 +118,7 @@ export default function ManageUsers() {
                         </button>
                     </div>
 
-                    <form onSubmit={handleCreate} className="p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <form onSubmit={handleCreate} className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Nome */}
                         <div>
                             <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nome completo</label>
@@ -182,7 +182,7 @@ export default function ManageUsers() {
                         </div>
 
                         {/* Botões */}
-                        <div className="xl:col-span-4 flex justify-end gap-3">
+                        <div className="lg:col-span-4 flex justify-end gap-3">
                             <button type="button" onClick={() => setShowForm(false)}
                                 className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                                 Cancelar
@@ -197,7 +197,46 @@ export default function ManageUsers() {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="lg:hidden flex flex-col gap-3">
+                {users.map((u) => {
+                    const isMe = currentUser && Number(u.id) === Number(currentUser.id);
+                    const isInactive = u.is_active == 0;
+                    return (
+                        <div key={u.id} className={`bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4 flex flex-col gap-3 ${isInactive ? "opacity-60 grayscale" : ""}`}>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {u.role === 'admin' && <ShieldAlert size={16} className="text-purple-600 shrink-0" />}
+                                    {u.role === 'professor' && <BookOpen size={16} className="text-blue-600 shrink-0" />}
+                                    {u.role === 'funcionario' && <Briefcase size={16} className="text-orange-600 shrink-0" />}
+                                    <span className="font-semibold text-sm text-slate-700 dark:text-slate-300 truncate">{u.name} {isMe && <span className="text-xs text-gray-400">(Eu)</span>}</span>
+                                </div>
+                                {!isMe && (
+                                    <button onClick={() => handleToggleStatus(u)} className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${isInactive ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600" : "bg-red-50 dark:bg-red-900/30 text-red-500"}`}>
+                                        {isInactive ? <><RotateCcw size={12} /> Ativar</> : <><Trash2 size={12} /> Desativar</>}
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{u.email}</p>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 dark:text-slate-400">Cargo:</span>
+                                {isMe ? (
+                                    <span className="text-xs font-bold text-gray-600 dark:text-slate-300">{u.role === "admin" ? "Admin" : u.role === "funcionario" ? "Funcionário" : "Professor"}</span>
+                                ) : (
+                                    <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)} disabled={isInactive} className="bg-transparent font-bold text-xs outline-none cursor-pointer text-slate-600 dark:text-slate-300">
+                                        <option value="professor">Professor</option>
+                                        <option value="funcionario">Funcionário</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden lg:block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-slate-400 uppercase text-xs font-bold border-b dark:border-slate-700">
                         <tr><th className="p-4">Nome</th><th className="p-4">Email</th><th className="p-4">Cargo</th><th className="p-4 text-center">Estado</th></tr>
@@ -221,12 +260,7 @@ export default function ManageUsers() {
                                                 {u.role === "admin" ? "Admin" : u.role === "funcionario" ? "Funcionário" : "Professor"}
                                             </span>
                                         ) : (
-                                            <select
-                                                value={u.role}
-                                                onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                                                disabled={isInactive}
-                                                className="bg-transparent font-bold text-sm outline-none cursor-pointer disabled:cursor-not-allowed text-slate-600 dark:text-slate-300"
-                                            >
+                                            <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)} disabled={isInactive} className="bg-transparent font-bold text-sm outline-none cursor-pointer disabled:cursor-not-allowed text-slate-600 dark:text-slate-300">
                                                 <option value="professor">Professor</option>
                                                 <option value="funcionario">Funcionário</option>
                                                 <option value="admin">Admin</option>
@@ -237,14 +271,7 @@ export default function ManageUsers() {
                                         {isMe ? (
                                             <span className="text-xs text-gray-300 dark:text-slate-600 select-none">—</span>
                                         ) : (
-                                            <button
-                                                onClick={() => handleToggleStatus(u)}
-                                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                                                    isInactive
-                                                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                                                        : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50"
-                                                }`}
-                                            >
+                                            <button onClick={() => handleToggleStatus(u)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${isInactive ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100" : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100"}`}>
                                                 {isInactive ? <><RotateCcw size={13} /> Ativar</> : <><Trash2 size={13} /> Desativar</>}
                                             </button>
                                         )}
