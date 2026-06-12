@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roomly-v4';
+const CACHE_NAME = 'roomly-v6';
 const SHELL_ASSETS = [
   '/',
   '/manifest.json',
@@ -25,8 +25,12 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
 
-  // Never cache API calls
-  if (url.pathname.includes('/roomly_api/') || url.hostname === '127.0.0.1') {
+  // Never cache API calls (any hostname, identified by path)
+  if (
+    url.pathname.includes('/roomly_api/') ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname === 'localhost' && url.pathname.includes('/api/')
+  ) {
     return;
   }
 
@@ -47,13 +51,22 @@ self.addEventListener('fetch', (e) => {
   // Navigation: Network first, fallback to cached /
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request).catch(() =>
-        caches.match('/').then((cached) =>
-          cached || new Response('<h1>Sem ligação</h1><p>Verifica a tua ligação à internet.</p>', {
-            headers: { 'Content-Type': 'text/html' }
-          })
+      fetch(e.request)
+        .then((res) => {
+          // Only cache valid responses
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put('/', clone));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.match('/').then((cached) =>
+            cached || new Response('<!DOCTYPE html><html><body><h1>Sem ligação</h1><p>Verifica a tua ligação à internet.</p></body></html>', {
+              headers: { 'Content-Type': 'text/html' }
+            })
+          )
         )
-      )
     );
     return;
   }
