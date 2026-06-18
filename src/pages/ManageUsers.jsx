@@ -91,7 +91,7 @@ export default function ManageUsers() {
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110 active:scale-95 shrink-0"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors hover:brightness-110 shrink-0"
                     style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}
                 >
                     {showForm ? <><X size={16} /> Cancelar</> : <><UserPlus size={16} /> Novo Utilizador</>}
@@ -188,7 +188,7 @@ export default function ManageUsers() {
                                 Cancelar
                             </button>
                             <button type="submit"
-                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110 active:scale-95"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors hover:brightness-110"
                                 style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}>
                                 <Save size={14} /> Criar Utilizador
                             </button>

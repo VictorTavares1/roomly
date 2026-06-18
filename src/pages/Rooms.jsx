@@ -11,6 +11,8 @@ import RoomCard from "../components/RoomCard";
 import { roomService, reservationService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
+import TimeSelect from "../components/TimeSelect";
+import DateSelect from "../components/DateSelect";
 
 function computeWeeklyHoursMap(reservations) {
     const now = new Date();
@@ -37,6 +39,7 @@ function computeWeeklyHoursMap(reservations) {
 function getRoomStatus(room) {
     if (!room.status) return "DISPONÍVEL";
     const s = room.status.toLowerCase();
+    if (s === "em_curso") return "DISPONÍVEL";
     if (s.includes("ocup")) return "OCUPADA";
     if (s.includes("manu")) return "EM MANUTENÇÃO";
     return "DISPONÍVEL";
@@ -383,49 +386,43 @@ export default function Rooms() {
                     </div>
 
                     {/* Data */}
-                    <div className="min-w-[140px] flex-1 sm:flex-none">
+                    <div className="flex-none">
                         <label className={labelClass}>Data</label>
-                        <input
-                            type="date"
+                        <DateSelect
                             value={dateInput}
                             min={todayStr}
-                            onChange={(e) => {
-                                setDateInput(e.target.value);
+                            onChange={(val) => {
+                                setDateInput(val);
                                 setStartTimeInput("");
                                 setEndTimeInput("");
                             }}
-                            className={inputClass}
                         />
                     </div>
 
                     {/* Hora início */}
                     <div className="min-w-[110px] flex-1 sm:flex-none">
                         <label className={labelClass}>Hora Início</label>
-                        <input
-                            type="time"
+                        <TimeSelect
                             value={startTimeInput}
+                            onChange={setStartTimeInput}
                             min={dateInput === todayStr ? nowTimeStr : undefined}
-                            onChange={(e) => setStartTimeInput(e.target.value)}
-                            className={inputClass}
                         />
                     </div>
 
                     {/* Hora fim */}
                     <div className="min-w-[110px] flex-1 sm:flex-none">
                         <label className={labelClass}>Hora Fim</label>
-                        <input
-                            type="time"
+                        <TimeSelect
                             value={endTimeInput}
-                            min={dateInput === todayStr ? nowTimeStr : startTimeInput || undefined}
-                            onChange={(e) => setEndTimeInput(e.target.value)}
-                            className={inputClass}
+                            onChange={setEndTimeInput}
+                            min={startTimeInput || undefined}
                         />
                     </div>
 
                     {availableIds !== null && (
                         <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-xs font-semibold text-green-700 dark:text-green-400">
                             <CheckCircle2 size={13} />
-                            {filteredRooms.length} sala{filteredRooms.length !== 1 ? "s" : ""} disponível{filteredRooms.length !== 1 ? "is" : ""}
+                            {filteredRooms.length} sala{filteredRooms.length !== 1 ? "s" : ""} disponíve{filteredRooms.length !== 1 ? "is" : "l"}
                         </div>
                     )}
 

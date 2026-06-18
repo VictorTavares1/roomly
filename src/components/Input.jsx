@@ -34,6 +34,7 @@ export default function Input({
                     required={required}
                     min={min}
                     max={max}
+                    lang="pt-PT"
                 />
             </div>
         </div>

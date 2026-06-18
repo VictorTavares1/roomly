@@ -11,7 +11,7 @@ export default function Button({
 }) {
 
     // Cores baseadas na variante
-    const baseStyles = "flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none";
+    const baseStyles = "flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed";
 
     const variants = {
         primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30",

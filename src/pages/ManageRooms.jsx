@@ -144,7 +144,7 @@ export default function ManageRooms() {
                 </div>
                 <button
                     onClick={openCreate}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110 active:scale-95 shrink-0"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors hover:brightness-110 shrink-0"
                     style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}
                 >
                     <Plus size={16} /> Nova Sala

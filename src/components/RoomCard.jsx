@@ -44,6 +44,7 @@ const statusConfig = {
 function getStatus(room) {
     if (!room.status) return "DISPONÍVEL";
     const s = room.status.toLowerCase();
+    if (s === "em_curso") return "EM_CURSO";
     if (s.includes("ocup")) return "OCUPADA";
     if (s.includes("manu")) return "EM MANUTENÇÃO";
     return "DISPONÍVEL";
@@ -62,7 +63,8 @@ export default function RoomCard({
     const { icon: Icon, bg, iconColor } =
         typeConfig[type] || typeConfig["AULA"];
     const status = getStatus(room);
-    const { badge } = statusConfig[status] || statusConfig["DISPONÍVEL"];
+    const displayStatus = status === "EM_CURSO" ? "DISPONÍVEL" : status;
+    const { badge } = statusConfig[displayStatus] || statusConfig["DISPONÍVEL"];
 
     const hours =
         weeklyHours != null ? Math.round(weeklyHours * 10) / 10 : null;
@@ -148,7 +150,7 @@ export default function RoomCard({
                 </button>
                 <button
                     onClick={() =>
-                        status === "DISPONÍVEL" &&
+                        displayStatus === "DISPONÍVEL" &&
                         navigate("/new-reservation", {
                             state: {
                                 room,
@@ -158,15 +160,15 @@ export default function RoomCard({
                             },
                         })
                     }
-                    disabled={status !== "DISPONÍVEL"}
+                    disabled={displayStatus !== "DISPONÍVEL"}
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                        status !== "DISPONÍVEL"
+                        displayStatus !== "DISPONÍVEL"
                             ? "bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed"
                             : "bg-blue-600 hover:bg-blue-700 text-white"
                     }`}
                 >
                     <CalendarPlus size={14} />
-                    {status === "EM MANUTENÇÃO" ? "Em Manutenção" : status === "OCUPADA" ? "Ocupada" : "Reservar"}
+                    {displayStatus === "EM MANUTENÇÃO" ? "Em Manutenção" : displayStatus === "OCUPADA" ? "Ocupada" : "Reservar"}
                 </button>
             </div>
 

@@ -218,16 +218,6 @@ export default function Login() {
             </div>
           </form>
 
-          <p className="mt-8 text-xs text-center text-gray-400">
-            Problemas no acesso?{" "}
-            <span className="text-blue-500 hover:text-blue-700 hover:underline cursor-pointer transition-colors">
-              Contacta os Serviços Administrativos.
-            </span>
-          </p>
-
-          <p className="mt-4 text-xs text-center text-gray-300">
-            © 2026 Roomly • Plataforma Oficial
-          </p>
         </div>
       </div>
     </div>

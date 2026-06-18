@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Calendar, Clock, MapPin, AlignLeft, CheckCircle, CalendarPlus, Users, AlertCircle, Lightbulb } from "lucide-react";
+import { Calendar, Clock, MapPin, AlignLeft, CheckCircle, CalendarPlus, Users, AlertCircle, Lightbulb, Search, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import DayTimeline from "../components/DayTimeline";
 import { roomService, reservationService } from "../services/api";
+import TimeSelect from "../components/TimeSelect";
+import DateSelect from "../components/DateSelect";
 import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
 
@@ -73,6 +75,18 @@ export default function NewReservation() {
     const [hasConflict, setHasConflict] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
 
+    const [roomSearch, setRoomSearch] = useState("");
+    const [roomDropOpen, setRoomDropOpen] = useState(false);
+    const roomRef = useRef(null);
+
+    useEffect(() => {
+        function handleClick(e) {
+            if (roomRef.current && !roomRef.current.contains(e.target)) setRoomDropOpen(false);
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
     const handleConflict = (conflict, reservations) => {
         setHasConflict(conflict);
         if (conflict && startTime && endTime && reservations) {
@@ -101,6 +115,12 @@ export default function NewReservation() {
 
         if (!date || !startTime || !endTime) {
             toast.error("Preenche a data e os horários antes de continuar.");
+            setLoading(false);
+            return;
+        }
+
+        if (purpose.trim().length < 3) {
+            toast.error("O motivo deve ter pelo menos 3 caracteres.");
             setLoading(false);
             return;
         }
@@ -154,19 +174,44 @@ export default function NewReservation() {
                         {/* Sala */}
                         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-3">
                             <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Sala</label>
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-3 text-gray-400 dark:text-slate-500" size={16} />
-                                <select
-                                    value={roomId}
-                                    onChange={(e) => setRoomId(e.target.value)}
-                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm text-slate-700 dark:text-slate-200"
-                                >
-                                    {rooms.map(room => (
-                                        <option key={room.id} value={room.id}>
-                                            {room.name} — cap. {room.capacity}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div className="relative" ref={roomRef}>
+                                {/* Input de pesquisa */}
+                                <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl cursor-pointer"
+                                    onClick={() => setRoomDropOpen(o => !o)}>
+                                    <Search size={14} className="text-gray-400 shrink-0" />
+                                    <input
+                                        type="text"
+                                        value={roomDropOpen ? roomSearch : (selectedRoom ? selectedRoom.name : "")}
+                                        onChange={e => { setRoomSearch(e.target.value); setRoomDropOpen(true); }}
+                                        onFocus={() => { setRoomSearch(""); setRoomDropOpen(true); }}
+                                        placeholder="Pesquisar sala..."
+                                        className="flex-1 bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none placeholder-gray-400 min-w-0"
+                                    />
+                                    <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${roomDropOpen ? "rotate-180" : ""}`} />
+                                </div>
+
+                                {/* Dropdown */}
+                                {roomDropOpen && (
+                                    <ul className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                                        {rooms
+                                            .filter(r => r.name.toLowerCase().includes(roomSearch.toLowerCase()))
+                                            .map(room => (
+                                                <li key={room.id}
+                                                    onMouseDown={() => { setRoomId(String(room.id)); setRoomDropOpen(false); setRoomSearch(""); }}
+                                                    className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors
+                                                        ${String(roomId) === String(room.id)
+                                                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                                                            : "text-slate-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700"
+                                                        }`}>
+                                                    <span className="font-medium">{room.name}</span>
+                                                    <span className="text-xs text-gray-400 dark:text-slate-500 shrink-0 ml-2">cap. {room.capacity}</span>
+                                                </li>
+                                            ))}
+                                        {rooms.filter(r => r.name.toLowerCase().includes(roomSearch.toLowerCase())).length === 0 && (
+                                            <li className="px-4 py-3 text-sm text-gray-400 text-center">Nenhuma sala encontrada</li>
+                                        )}
+                                    </ul>
+                                )}
                             </div>
 
                             {/* Info da sala selecionada */}
@@ -190,56 +235,17 @@ export default function NewReservation() {
                         {/* Data e Horas */}
                         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-3">
                             <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Data & Horário</label>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">Data <span className="text-red-500">*</span></label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Calendar className="h-5 w-5 text-gray-400 dark:text-slate-500" />
-                                    </div>
-                                    <input
-                                        type="date"
-                                        value={date}
-                                        onChange={e => setDate(e.target.value)}
-                                        className="block w-full pl-10 pr-4 py-3.5 border border-gray-200 dark:border-white/[0.1] rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-100 shadow-sm"
-                                    />
-                                </div>
-                            </div>
+                            <DateSelect label="Data" value={date} onChange={setDate} required min={new Date().toISOString().slice(0, 10)} />
                             <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">Início <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Clock className="h-5 w-5 text-gray-400 dark:text-slate-500" />
-                                        </div>
-                                        <input
-                                            type="time"
-                                            value={startTime}
-                                            onChange={e => setStartTime(e.target.value)}
-                                            className="block w-full pl-10 pr-4 py-3.5 border border-gray-200 dark:border-white/[0.1] rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-100 shadow-sm"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">Fim <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Clock className="h-5 w-5 text-gray-400 dark:text-slate-500" />
-                                        </div>
-                                        <input
-                                            type="time"
-                                            value={endTime}
-                                            onChange={e => setEndTime(e.target.value)}
-                                            className="block w-full pl-10 pr-4 py-3.5 border border-gray-200 dark:border-white/[0.1] rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-100 shadow-sm"
-                                        />
-                                    </div>
-                                </div>
+                                <TimeSelect label="Início" value={startTime} onChange={setStartTime} required />
+                                <TimeSelect label="Fim" value={endTime} onChange={setEndTime} required min={startTime || undefined} />
                             </div>
                         </div>
 
                         {/* Motivo */}
                         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-3">
                             <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Motivo</label>
-                            <Input type="text" placeholder="Ex: Aula de Apoio, Reunião de Equipa..." value={purpose} onChange={setPurpose} icon={AlignLeft} required />
+                            <Input type="text" placeholder="Ex: Aula de Apoio, Reunião de Equipa..." value={purpose} onChange={setPurpose} icon={AlignLeft} required max={200} />
                         </div>
 
                         {hasConflict && (

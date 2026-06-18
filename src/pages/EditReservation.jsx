@@ -6,6 +6,8 @@ import Layout from "../components/Layout";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { roomService, reservationService } from "../services/api";
+import TimeSelect from "../components/TimeSelect";
+import DateSelect from "../components/DateSelect";
 import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
 
@@ -118,11 +120,11 @@ export default function EditReservation() {
                             </div>
                         </div>
 
-                        <Input label="Data" type="date" value={date} onChange={setDate} icon={Calendar} required />
+                        <DateSelect label="Data" value={date} onChange={setDate} required />
 
                         <div className="grid grid-cols-2 gap-4">
-                            <Input label="Hora Início" type="time" value={startTime} onChange={setStartTime} icon={Clock} required />
-                            <Input label="Hora Fim" type="time" value={endTime} onChange={setEndTime} icon={Clock} required />
+                            <TimeSelect label="Hora Início" value={startTime} onChange={setStartTime} required />
+                            <TimeSelect label="Hora Fim" value={endTime} onChange={setEndTime} required min={startTime || undefined} />
                         </div>
 
                         <Input label="Motivo" type="text" placeholder="Ex: Aula de Apoio" value={purpose} onChange={setPurpose} icon={AlignLeft} required />

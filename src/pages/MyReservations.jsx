@@ -55,7 +55,7 @@ export default function MyReservations() {
                         try {
                             const res = await reservationService.cancel(id);
                             if (res.status === "sucesso") {
-                                setReservations((prev) => prev.filter((r) => r.id !== id));
+                                setReservations((prev) => prev.map((r) => r.id === id ? { ...r, status: "cancelada" } : r));
                                 toast.success("Reserva cancelada!");
                             } else {
                                 toast.error(res.mensagem || "Erro ao cancelar.");
@@ -209,9 +209,14 @@ export default function MyReservations() {
                                                                 Editar
                                                             </button>
                                                             <button
-                                                                onClick={() => handleDelete(reserva.id)}
-                                                                title="Cancelar reserva"
-                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all"
+                                                                onClick={() => !isOngoing && handleDelete(reserva.id)}
+                                                                disabled={isOngoing}
+                                                                title={isOngoing ? "Não é possível cancelar uma reserva em curso" : "Cancelar reserva"}
+                                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                                                    isOngoing
+                                                                        ? "bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-slate-600 cursor-not-allowed"
+                                                                        : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50"
+                                                                }`}
                                                             >
                                                                 <Trash2 size={13} />
                                                                 Cancelar
@@ -267,8 +272,14 @@ export default function MyReservations() {
                                                     <Pencil size={12} /> Editar
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(reserva.id)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400"
+                                                    onClick={() => !isOngoing && handleDelete(reserva.id)}
+                                                    disabled={isOngoing}
+                                                    title={isOngoing ? "Não é possível cancelar uma reserva em curso" : "Cancelar reserva"}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                                        isOngoing
+                                                            ? "bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-slate-600 cursor-not-allowed"
+                                                            : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400"
+                                                    }`}
                                                 >
                                                     <Trash2 size={12} /> Cancelar
                                                 </button>

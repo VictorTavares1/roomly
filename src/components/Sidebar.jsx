@@ -223,16 +223,15 @@ function SectionLabel({ label, collapsed }) {
 
 const roleLabel = { admin: "Administrador", funcionario: "Funcionário", professor: "Professor" };
 
-function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
+function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canInstallManual, install }) {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const { canInstall, install } = usePWAInstall();
     const isAdmin = user?.role === "admin";
     const isStaff = user?.role === "admin" || user?.role === "funcionario";
     const [from] = getAvatarColors(user?.name || "");
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 overflow-hidden">
 
             {/* Logo + collapse button */}
             <div className={`flex items-center shrink-0 py-4 ${collapsed ? "justify-center px-2" : "justify-between px-4"}`}>
@@ -272,11 +271,11 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
                 </div>
             )}
 
-            {/* Nav */}
+            {/* Nav + Bottom — tudo num único scroll */}
             <nav className="flex-1 overflow-y-auto px-1.5 custom-scrollbar">
                 <SectionLabel label="Principal" collapsed={collapsed} />
                 <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} collapsed={collapsed} />
-                <NavItem to="/rooms" icon={MapPin} label="Espaços" onClick={onClose} collapsed={collapsed} />
+                <NavItem to="/rooms" icon={MapPin} label="Salas" onClick={onClose} collapsed={collapsed} />
                 <NavItem to="/my-reservations" icon={Calendar} label="Minhas Reservas" onClick={onClose} collapsed={collapsed} />
 
                 <SectionLabel label="Suporte" collapsed={collapsed} />
@@ -295,26 +294,41 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
                         )}
                     </>
                 )}
-            </nav>
 
-            {/* Bottom */}
-            <div className={`shrink-0 py-3 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5 ${collapsed ? "px-1.5" : "px-1.5"}`}>
+                {/* Bottom */}
+                <div className={`py-3 mt-2 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5`}>
 
                 {/* Instalar PWA */}
-                {canInstall && (
+                {canInstallManual && (
                     <div className="relative group/install">
                         <button
-                            onClick={install}
-                            className={`w-full flex items-center rounded-xl text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all
+                            onClick={canInstall ? install : undefined}
+                            title={canInstall ? "Instalar App" : "Clica no ícone ⊕ na barra de endereço para instalar"}
+                            className={`w-full flex items-center rounded-xl text-sm font-medium transition-all
+                                ${canInstall
+                                    ? "text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
+                                    : "text-gray-400 dark:text-slate-500 cursor-default"}
                                 ${collapsed ? "justify-center px-0 py-2.5 mx-1" : "gap-3 px-3 py-2.5"}`}
                         >
                             <Download size={17} className="shrink-0" />
-                            {!collapsed && <span>Instalar App</span>}
+                            {!collapsed && (
+                                <span>
+                                    Instalar App
+                                    {!canInstall && <span className="ml-1 text-[10px]">(ver barra)</span>}
+                                </span>
+                            )}
                         </button>
+                        {/* Tooltip desktop colapsada */}
                         {collapsed && (
                             <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-slate-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover/install:opacity-100 transition-opacity pointer-events-none z-50">
-                                Instalar App
+                                {canInstall ? "Instalar App" : "Usa o ícone ⊕ na barra do browser"}
                                 <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900 dark:border-r-slate-700" />
+                            </div>
+                        )}
+                        {/* Tooltip instrução quando sem prompt */}
+                        {!canInstall && !collapsed && (
+                            <div className="mx-3 mb-1 px-2.5 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-[11px] text-blue-600 dark:text-blue-400 leading-snug">
+                                Clica no ícone <strong>⊕</strong> na barra de endereço do browser
                             </div>
                         )}
                     </div>
@@ -385,7 +399,8 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse }) {
                         </div>
                     </div>
                 )}
-            </div>
+                </div>
+            </nav>
         </div>
     );
 }
@@ -396,6 +411,7 @@ export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem("sidebar_collapsed") === "true");
     const [mobileOpen, setMobileOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(() => mq ? mq.matches : false);
+    const { canInstall, canInstallManual, install } = usePWAInstall();
     const location = useLocation();
 
     useEffect(() => { setMobileOpen(false); }, [location.pathname]);
@@ -421,9 +437,9 @@ export default function Sidebar() {
             {/* Desktop */}
             {isDesktop && (
                 <aside
-                    className={`flex flex-col shrink-0 h-screen sticky top-0 bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-700/60 shadow-sm transition-all duration-300 ease-in-out z-30 ${collapsed ? "w-16" : "w-60"}`}
+                    className={`flex flex-col shrink-0 h-full bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-700/60 shadow-sm transition-all duration-300 ease-in-out z-30 ${collapsed ? "w-16" : "w-60"}`}
                 >
-                    <SidebarContent collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+                    <SidebarContent collapsed={collapsed} onToggleCollapse={toggleCollapse} canInstall={canInstall} canInstallManual={canInstallManual} install={install} />
                 </aside>
             )}
 
@@ -464,7 +480,7 @@ export default function Sidebar() {
                             </button>
                         </div>
                         <div className="h-[calc(100%-60px)]">
-                            <SidebarContent onClose={() => setMobileOpen(false)} collapsed={false} />
+                            <SidebarContent onClose={() => setMobileOpen(false)} collapsed={false} canInstall={canInstall} canInstallManual={canInstallManual} install={install} />
                         </div>
                     </div>
                 </>
