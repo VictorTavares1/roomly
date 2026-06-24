@@ -6,6 +6,10 @@ import {
     AlertTriangle, UserPlus, Edit3, ChevronRight, BarChart2,
     PlusSquare, Trash2, UserCog, ShieldCheck, FileEdit
 } from "lucide-react";
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+    ResponsiveContainer, Cell
+} from "recharts";
 import Layout from "../components/Layout";
 import { dashboardService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -78,32 +82,16 @@ const StatCard = ({ icon: Icon, label, value, iconBg, sub, subColor = "text-gray
     </div>
 );
 
-const RoomBar = ({ name, capacity, reservas, maxReservas }) => {
-    const pct = maxReservas > 0 ? Math.round((reservas / maxReservas) * 100) : 0;
+const BAR_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#06b6d4", "#10b981"];
+
+const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
     return (
-        <div className="flex items-center gap-4 py-3 border-b border-gray-50 dark:border-slate-700/60 last:border-0">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                <DoorOpen size={17} className="text-blue-500 dark:text-blue-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1.5">
-                    <div>
-                        <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 truncate">{name}</p>
-                        {capacity && (
-                            <p className="text-xs text-gray-400 dark:text-slate-500">Capacidade: {capacity} pessoas</p>
-                        )}
-                    </div>
-                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 ml-3 shrink-0">
-                        {reservas} <span className="font-normal text-gray-400 dark:text-slate-500">reservas</span>
-                    </span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-blue-500 rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%` }}
-                    />
-                </div>
-            </div>
+        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg px-3 py-2 text-xs">
+            <p className="font-bold text-gray-800 dark:text-slate-100 mb-0.5">{d.name}</p>
+            {d.capacity && <p className="text-gray-400 dark:text-slate-500">Cap.: {d.capacity} pessoas</p>}
+            <p className="text-blue-600 dark:text-blue-400 font-semibold mt-0.5">{d.reservas} reservas</p>
         </div>
     );
 };
@@ -165,8 +153,6 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, [fetchStats]);
 
-    const maxReservas = Math.max(...(stats.chart_data || []).map(r => r.reservas), 1);
-
     return (
         <Layout>
             {/* Header */}
@@ -197,7 +183,6 @@ export default function Dashboard() {
                     label="Salas Disponíveis"
                     value={stats.rooms}
                     iconBg="bg-blue-500"
-                    sub="disponíveis para reservar hoje"
                 />
                 <StatCard
                     icon={Calendar}
@@ -247,17 +232,37 @@ export default function Dashboard() {
                         </button>
                     </div>
 
-                    <div className="mt-3">
+                    <div className="mt-4">
                         {stats.chart_data && stats.chart_data.length > 0 ? (
-                            stats.chart_data.map((room, i) => (
-                                <RoomBar
-                                    key={i}
-                                    name={room.name}
-                                    capacity={room.capacity}
-                                    reservas={room.reservas}
-                                    maxReservas={maxReservas}
-                                />
-                            ))
+                            <ResponsiveContainer width="100%" height={220}>
+                                <BarChart
+                                    data={stats.chart_data}
+                                    margin={{ top: 4, right: 8, left: -20, bottom: 4 }}
+                                    barCategoryGap="30%"
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid, #f1f5f9)" vertical={false} />
+                                    <XAxis
+                                        dataKey="name"
+                                        tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        interval={0}
+                                        tickFormatter={v => v.length > 10 ? v.slice(0, 10) + "…" : v}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        allowDecimals={false}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(99,102,241,0.06)" }} />
+                                    <Bar dataKey="reservas" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                                        {stats.chart_data.map((_, i) => (
+                                            <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400 dark:text-slate-500">
                                 <DoorOpen size={32} className="opacity-20" />

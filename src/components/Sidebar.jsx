@@ -188,18 +188,18 @@ function NavItem({ to, icon: Icon, label, onClick, collapsed }) {
                 to={to}
                 onClick={onClick}
                 className={`flex items-center rounded-xl text-sm font-medium transition-all
-                    ${collapsed ? "justify-center px-0 py-2.5 mx-1" : "gap-3 px-3 py-2.5"}
+                    ${collapsed ? "justify-center px-0 py-2.5 mx-1" : "gap-3 px-3 py-2"}
                     ${active
-                        ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                        ? "text-gray-900 dark:text-slate-100"
                         : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700/60 hover:text-gray-900 dark:hover:text-slate-100"
                     }`}
             >
-                <Icon size={17} className={active
-                    ? "text-white shrink-0"
-                    : "text-gray-400 dark:text-slate-500 group-hover/item:text-gray-600 dark:group-hover/item:text-slate-300 shrink-0"
-                } />
+                <Icon size={17} className={`shrink-0 transition-colors ${active
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-400 dark:text-slate-500 group-hover/item:text-gray-600 dark:group-hover/item:text-slate-300"
+                }`} />
                 {!collapsed && <span className="flex-1 leading-none">{label}</span>}
-                {!collapsed && active && <ChevronRight size={13} className="text-white/60 shrink-0" />}
+                {!collapsed && active && <ChevronRight size={13} className="text-blue-400 shrink-0" />}
             </Link>
             {/* Tooltip quando colapsada */}
             {collapsed && (

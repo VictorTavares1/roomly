@@ -1,28 +1,37 @@
 import { useState, useEffect } from "react";
 
+// Captura o evento o mais cedo possível, antes do React montar
+let _earlyPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    _earlyPrompt = e;
+});
+
 export function usePWAInstall() {
-    const [prompt, setPrompt] = useState(null);
+    const [prompt, setPrompt] = useState(() => _earlyPrompt);
     const [installed, setInstalled] = useState(
-        () => localStorage.getItem("pwa_installed") === "true"
+        () =>
+            localStorage.getItem("pwa_installed") === "true" ||
+            window.matchMedia("(display-mode: standalone)").matches
     );
 
     useEffect(() => {
-        // Se o browser disparar beforeinstallprompt, a app NÃO está instalada
+        // Apanha eventos que cheguem depois da montagem
         const handlePrompt = (e) => {
             e.preventDefault();
+            _earlyPrompt = e;
             setPrompt(e);
             localStorage.removeItem("pwa_installed");
             setInstalled(false);
         };
 
-        // Quando o utilizador instala, guarda no localStorage
         const handleInstalled = () => {
             localStorage.setItem("pwa_installed", "true");
             setInstalled(true);
             setPrompt(null);
+            _earlyPrompt = null;
         };
 
-        // Se a app estiver a correr em modo standalone, está instalada
         if (window.matchMedia("(display-mode: standalone)").matches) {
             localStorage.setItem("pwa_installed", "true");
             setInstalled(true);
@@ -45,12 +54,13 @@ export function usePWAInstall() {
             localStorage.setItem("pwa_installed", "true");
             setInstalled(true);
             setPrompt(null);
+            _earlyPrompt = null;
         }
     };
 
     return {
-        canInstall: !!prompt && !installed,   // prompt disponível → botão de instalação direta
-        canInstallManual: !installed,          // não instalada → mostrar botão mesmo sem prompt
+        canInstall: !!prompt && !installed,
+        canInstallManual: !installed,
         install,
     };
 }

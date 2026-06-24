@@ -11,9 +11,16 @@ import { useAuth } from "../context/AuthContext";
 import { translateMessage } from "../utils/translations";
 
 const STATUS = {
-    aberto:     { label: "Em análise",  color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400", dot: "bg-orange-500" },
+    aberto:     { label: "Em análise",  color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", dot: "bg-amber-500" },
     em_curso:   { label: "Em curso",    color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",   dot: "bg-blue-500" },
     resolvido:  { label: "Resolvido",   color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", dot: "bg-emerald-500" },
+};
+
+const formatDate = (str) => {
+    if (!str) return null;
+    const d = new Date(str.includes("T") ? str : str.replace(" ", "T"));
+    if (isNaN(d)) return null;
+    return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
 };
 
 function StatusBadge({ status }) {
@@ -63,8 +70,9 @@ export default function ReportIssue() {
         }
     }, [loadReports, user]);
 
-    const openCount   = reports.filter(r => r.status !== "resolvido").length;
-    const resolvedCount = reports.filter(r => r.status === "resolvido").length;
+    const [tab, setTab] = useState("new");
+
+    const openCount = reports.filter(r => r.status !== "resolvido").length;
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -116,34 +124,59 @@ export default function ReportIssue() {
     return (
         <Layout>
             {/* Header */}
-            <div className="mb-7">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2.5">
-                    <Wrench size={22} className="text-orange-500" />
-                    Suporte Técnico
-                </h1>
-                <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
-                    Reporta avarias e acompanha o estado dos teus problemas.
-                </p>
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-5">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2.5">
+                            <Wrench size={22} className="text-orange-500" />
+                            Suporte Técnico
+                        </h1>
+                        <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
+                            Reporta avarias e acompanha o estado dos teus problemas.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex border-b border-gray-100 dark:border-slate-700 gap-1">
+                    <button
+                        onClick={() => setTab("new")}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${
+                            tab === "new"
+                                ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                                : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                        }`}
+                    >
+                        <AlertTriangle size={15} />
+                        Novo Reporte
+                    </button>
+                    <button
+                        onClick={() => setTab("mine")}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${
+                            tab === "mine"
+                                ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                                : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                        }`}
+                    >
+                        <ClipboardList size={15} />
+                        Os meus reportes
+                        {openCount > 0 && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                                tab === "mine"
+                                    ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400"
+                                    : "bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400"
+                            }`}>
+                                {openCount}
+                            </span>
+                        )}
+                    </button>
+                </div>
             </div>
 
-            {/* Layout principal — formulário + histórico */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-
-                {/* ── FORMULÁRIO ── */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
-                        {/* Header do card */}
-                        <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                                <AlertTriangle size={15} className="text-orange-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-gray-800 dark:text-slate-100">Novo Relatório</p>
-                                <p className="text-xs text-gray-400 dark:text-slate-500">Descreve o problema encontrado</p>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+            {/* ── TAB: NOVO REPORTE ── */}
+            {tab === "new" && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden max-w-2xl">
+                    <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
                             {/* Sala */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
@@ -231,86 +264,65 @@ export default function ReportIssue() {
                                 {submitting ? "A enviar..." : "Enviar Relatório"}
                             </button>
                         </form>
-                    </div>
                 </div>
+            )}
 
-                {/* ── HISTÓRICO ── */}
-                <div className="lg:col-span-3">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
-                        {/* Header */}
-                        <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                    <ClipboardList size={15} className="text-blue-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-gray-800 dark:text-slate-100">Os Meus Reports</p>
-                                    <p className="text-xs text-gray-400 dark:text-slate-500">Atualiza automaticamente a cada 10s</p>
-                                </div>
+            {/* ── TAB: OS MEUS REPORTES ── */}
+            {tab === "mine" && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
+                    <div className="divide-y divide-gray-50 dark:divide-slate-700/60">
+                        {loadingReports ? (
+                            <div className="flex items-center justify-center py-16">
+                                <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
                             </div>
-                            {openCount > 0 && (
-                                <span className="text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2.5 py-1 rounded-full">
-                                    {openCount} em aberto
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Lista */}
-                        <div className="divide-y divide-gray-50 dark:divide-slate-700/60">
-                            {loadingReports ? (
-                                <div className="flex items-center justify-center py-16">
-                                    <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        ) : reports.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-slate-700/50 flex items-center justify-center">
+                                    <ClipboardList size={28} className="text-gray-300 dark:text-slate-600" />
                                 </div>
-                            ) : reports.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400 dark:text-slate-500">
-                                    <ClipboardList size={36} className="opacity-20" />
-                                    <p className="text-sm font-medium">Ainda não reportaste nenhum problema.</p>
-                                    <p className="text-xs">Os teus relatórios aparecerão aqui.</p>
+                                <div className="text-center">
+                                    <p className="text-sm font-semibold text-gray-600 dark:text-slate-300">Nenhum reporte ainda</p>
+                                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Os teus relatórios aparecerão aqui.</p>
                                 </div>
-                            ) : (
-                                reports.map((report) => (
-                                    <div key={report.id}
-                                        className={`px-5 py-4 flex flex-col gap-2 transition-colors ${
-                                            report.status === "resolvido"
-                                                ? "opacity-60"
-                                                : "hover:bg-gray-50 dark:hover:bg-slate-700/30"
-                                        }`}>
-                                        {/* Linha superior */}
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <MapPin size={14} className="text-gray-400 dark:text-slate-500 shrink-0" />
-                                                <span className="text-sm font-bold text-gray-800 dark:text-slate-100 truncate">
-                                                    {report.room_name}
-                                                </span>
-                                            </div>
-                                            <StatusBadge status={report.status} />
-                                        </div>
-
-                                        {/* Descrição */}
-                                        <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed line-clamp-2 pl-5">
-                                            {report.description}
-                                        </p>
-
-                                        {/* Meta */}
-                                        <div className="flex items-center gap-3 pl-5">
-                                            <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500">
-                                                <Clock size={11} />
-                                                {new Date(report.created_at).toLocaleDateString("pt-PT", {
-                                                    day: "2-digit", month: "short", year: "numeric"
-                                                })}
-                                            </span>
-                                            <span className="text-xs text-gray-300 dark:text-slate-600">·</span>
-                                            <span className="text-xs text-gray-400 dark:text-slate-500">
-                                                Report #{report.id}
+                                <button
+                                    onClick={() => setTab("new")}
+                                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                                >
+                                    <AlertTriangle size={15} /> Reportar um problema
+                                </button>
+                            </div>
+                        ) : (
+                            reports.map((report) => (
+                                <div key={report.id}
+                                    className={`px-5 py-4 flex flex-col gap-2 transition-colors ${
+                                        report.status === "resolvido"
+                                            ? "opacity-60"
+                                            : "hover:bg-gray-50 dark:hover:bg-slate-700/30"
+                                    }`}>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <MapPin size={14} className="text-gray-400 dark:text-slate-500 shrink-0" />
+                                            <span className="text-sm font-bold text-gray-800 dark:text-slate-100 truncate">
+                                                {report.room_name}
                                             </span>
                                         </div>
+                                        <StatusBadge status={report.status} />
                                     </div>
-                                ))
-                            )}
-                        </div>
+                                    <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed line-clamp-2 pl-5">
+                                        {report.description}
+                                    </p>
+                                    <div className="flex items-center gap-2 pl-5">
+                                        <Clock size={11} className="text-gray-400 dark:text-slate-500" />
+                                        <span className="text-xs text-gray-400 dark:text-slate-500">
+                                            {formatDate(report.created_at) ?? "Data não disponível"}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
-            </div>
+            )}
         </Layout>
     );
 }

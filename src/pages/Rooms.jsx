@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, Type, Users, Projector, Save,
     GraduationCap, Building2, Monitor, UsersRound,
     CalendarPlus, AlertTriangle, Clock, CheckCircle2, Wrench,
-    Calendar, MapPin
+    Calendar, MapPin, SlidersHorizontal
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
@@ -65,6 +65,16 @@ export default function Rooms() {
 
     const [rooms, setRooms] = useState([]);
     const [weeklyMap, setWeeklyMap] = useState(null);
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const filtersRef = useRef(null);
+
+    useEffect(() => {
+        function handleClick(e) {
+            if (filtersRef.current && !filtersRef.current.contains(e.target)) setFiltersOpen(false);
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
 
     // Modal Editar Sala
     const [showEditModal, setShowEditModal] = useState(false);
@@ -131,10 +141,13 @@ export default function Rooms() {
         setSearchTerm(searchInput);
     }, [searchInput]);
 
-    const applyFilters = async () => {
-        setTypeFilter(typeInput);
-        setCapacityFilter(capacityInput);
-        setStateFilter(stateInput);
+    const applyFilters = async (overrides = {}) => {
+        const t = overrides.type !== undefined ? overrides.type : typeInput;
+        const c = overrides.capacity !== undefined ? overrides.capacity : capacityInput;
+        const s = overrides.state !== undefined ? overrides.state : stateInput;
+        setTypeFilter(t);
+        setCapacityFilter(c);
+        setStateFilter(s);
 
         if (dateInput && startTimeInput && endTimeInput) {
             if (startTimeInput >= endTimeInput) {
@@ -247,9 +260,8 @@ export default function Rooms() {
     const stats = useMemo(() => {
         const total = rooms.length;
         const disponiveis = rooms.filter((r) => getRoomStatus(r) === "DISPONÍVEL").length;
-        const ocupadas = rooms.filter((r) => getRoomStatus(r) === "OCUPADA").length;
         const manutencao = rooms.filter((r) => getRoomStatus(r) === "EM MANUTENÇÃO").length;
-        return { total, disponiveis, ocupadas, manutencao };
+        return { total, disponiveis, manutencao };
     }, [rooms]);
 
     const handleDelete = async (id) => {
@@ -290,10 +302,9 @@ export default function Rooms() {
         );
     };
 
-    const inputClass =
-        "w-full border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700/60 text-sm text-gray-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all";
-    const labelClass =
-        "block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-1.5";
+    const chipBase = "flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-medium transition-all cursor-pointer select-none";
+    const chipIdle = "border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-500 hover:text-gray-700 dark:hover:text-slate-200 bg-white dark:bg-slate-800";
+    const chipActive = "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
 
     return (
         <Layout>
@@ -305,149 +316,143 @@ export default function Rooms() {
                     </h1>
                     <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
                         {isAdmin
-                            ? "Gerir e consultar todas as salas disponíveis"
-                            : "Consulta e reserva as salas disponíveis"}
+                            ? "Gere o catálogo de espaços disponíveis para reserva"
+                            : "Encontra o espaço certo para a tua aula ou reunião"}
                     </p>
                 </div>
             </div>
 
             {/* Filter bar */}
-            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-4 mb-5 shadow-sm">
-                <div className="flex flex-wrap gap-3 items-end">
-                    {/* Search */}
-                    <div className="flex-1 min-w-[140px]">
-                        <label className={labelClass}>Pesquisar</label>
-                        <div className="flex items-center gap-2 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700/60 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all">
-                            <Search size={13} className="text-gray-400 dark:text-slate-500 shrink-0" />
-                            <input
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                placeholder="Pesquisar sala..."
-                                className="bg-transparent text-sm text-gray-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 outline-none flex-1"
-                            />
-                        </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 px-4 py-3 mb-5 flex flex-col gap-3">
+
+                {/* Linha principal: pesquisa + botão filtros */}
+                <div className="flex gap-2 items-center">
+                    <div className="flex-1 flex items-center gap-3 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all bg-gray-50/50 dark:bg-slate-700/30">
+                        <Search size={15} className="text-gray-400 dark:text-slate-500 shrink-0" />
+                        <input
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            placeholder="Pesquisar sala por nome..."
+                            className="bg-transparent text-sm text-gray-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 outline-none flex-1"
+                        />
+                        {searchInput && (
+                            <button onClick={() => setSearchInput("")} className="text-gray-300 hover:text-gray-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors">
+                                <X size={14} />
+                            </button>
+                        )}
                     </div>
 
-                    {/* Tipo de Sala */}
-                    <div className="min-w-[140px] flex-1 sm:flex-none">
-                        <label className={labelClass}>Tipo de Sala</label>
-                        <select
-                            value={typeInput}
-                            onChange={(e) => setTypeInput(e.target.value)}
-                            className={inputClass}
+                    {/* Botão Filtros */}
+                    <div className="relative" ref={filtersRef}>
+                        <button
+                            onClick={() => setFiltersOpen(o => !o)}
+                            className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all
+                                ${(typeFilter || capacityFilter || stateFilter)
+                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                                    : "border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-500 bg-white dark:bg-slate-800"
+                                }`}
                         >
-                            <option value="">Todos os tipos</option>
-                            <option value="AUDITÓRIO">Auditório</option>
-                            <option value="REUNIÃO">Reunião</option>
-                            <option value="LABORATÓRIO">Laboratório</option>
-                            <option value="AULA">Aula</option>
-                        </select>
-                    </div>
+                            <SlidersHorizontal size={15} />
+                            Filtros
+                            {(typeFilter || capacityFilter || stateFilter) && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                            )}
+                        </button>
 
-                    {/* Capacidade */}
-                    <div className="min-w-[140px] flex-1 sm:flex-none">
-                        <label className={labelClass}>Capacidade</label>
-                        <select
-                            value={capacityInput}
-                            onChange={(e) => setCapacityInput(e.target.value)}
-                            className={inputClass}
-                        >
-                            <option value="">Qualquer</option>
-                            <option value="small">Até 20 pessoas</option>
-                            <option value="medium">20 – 50 pessoas</option>
-                            <option value="large">50 – 100 pessoas</option>
-                            <option value="xlarge">Mais de 100</option>
-                        </select>
-                    </div>
+                        {/* Dropdown */}
+                        {filtersOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-4 flex flex-col gap-4">
 
-                    {/* Estado */}
-                    <div className="min-w-[140px] flex-1 sm:flex-none">
-                        <label className={labelClass}>Estado</label>
-                        <select
-                            value={stateInput}
-                            onChange={(e) => setStateInput(e.target.value)}
-                            className={inputClass}
-                        >
-                            <option value="">Todos os estados</option>
-                            <option value="DISPONÍVEL">Disponível</option>
-                            <option value="OCUPADA">Ocupada</option>
-                            <option value="EM MANUTENÇÃO">Em Manutenção</option>
-                        </select>
+                                {/* Tipo */}
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 mb-2">Tipo de sala</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {["AUDITÓRIO","REUNIÃO","LABORATÓRIO","AULA"].map(t => {
+                                            const next = typeInput === t ? "" : t;
+                                            const label = t === "AUDITÓRIO" ? "Auditório" : t === "REUNIÃO" ? "Reunião" : t === "LABORATÓRIO" ? "Laboratório" : "Aula";
+                                            return (
+                                                <button key={t} onClick={() => { setTypeInput(next); applyFilters({ type: next }); }}
+                                                    className={`${chipBase} ${typeInput === t ? chipActive : chipIdle}`}>
+                                                    {label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Capacidade */}
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 mb-2">Capacidade</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {[
+                                            { value: "small", label: "Até 20" },
+                                            { value: "medium", label: "20–50" },
+                                            { value: "large", label: "50–100" },
+                                            { value: "xlarge", label: "+100" },
+                                        ].map(c => {
+                                            const next = capacityInput === c.value ? "" : c.value;
+                                            return (
+                                                <button key={c.value} onClick={() => { setCapacityInput(next); applyFilters({ capacity: next }); }}
+                                                    className={`${chipBase} ${capacityInput === c.value ? chipActive : chipIdle}`}>
+                                                    <Users size={11} /> {c.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Estado */}
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 mb-2">Estado</p>
+                                    <div className="flex gap-1.5">
+                                        {(() => {
+                                            const next = stateInput === "EM MANUTENÇÃO" ? "" : "EM MANUTENÇÃO";
+                                            return (
+                                                <button onClick={() => { setStateInput(next); applyFilters({ state: next }); }}
+                                                    className={`${chipBase} ${stateInput === "EM MANUTENÇÃO" ? "border-red-400 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400" : chipIdle}`}>
+                                                    Em Manutenção
+                                                </button>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                {(typeFilter || capacityFilter || stateFilter) && (
+                                    <button onClick={() => { clearFilters(); setFiltersOpen(false); }}
+                                        className="w-full text-xs font-medium text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors pt-2 border-t border-gray-100 dark:border-slate-700 flex items-center justify-center gap-1">
+                                        <X size={11} /> Limpar filtros
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Availability row */}
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700 flex flex-wrap gap-3 items-end">
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        <Calendar size={13} className="text-blue-500" />
-                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
-                            Disponibilidade
-                        </span>
-                    </div>
-
-                    {/* Data */}
-                    <div className="flex-none">
-                        <label className={labelClass}>Data</label>
-                        <DateSelect
-                            value={dateInput}
-                            min={todayStr}
-                            onChange={(val) => {
-                                setDateInput(val);
-                                setStartTimeInput("");
-                                setEndTimeInput("");
-                            }}
-                        />
-                    </div>
-
-                    {/* Hora início */}
-                    <div className="min-w-[110px] flex-1 sm:flex-none">
-                        <label className={labelClass}>Hora Início</label>
-                        <TimeSelect
-                            value={startTimeInput}
-                            onChange={setStartTimeInput}
-                            min={dateInput === todayStr ? nowTimeStr : undefined}
-                        />
-                    </div>
-
-                    {/* Hora fim */}
-                    <div className="min-w-[110px] flex-1 sm:flex-none">
-                        <label className={labelClass}>Hora Fim</label>
-                        <TimeSelect
-                            value={endTimeInput}
-                            onChange={setEndTimeInput}
-                            min={startTimeInput || undefined}
-                        />
-                    </div>
+                {/* Disponibilidade */}
+                <div className="flex flex-wrap gap-2 items-center pt-1 border-t border-gray-100 dark:border-slate-700">
+                    <span className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1 shrink-0">
+                        <Calendar size={11} /> Disponível em
+                    </span>
+                    <DateSelect value={dateInput} min={todayStr} onChange={(val) => { setDateInput(val); setStartTimeInput(""); setEndTimeInput(""); }} />
+                    <TimeSelect value={startTimeInput} onChange={setStartTimeInput} min={dateInput === todayStr ? nowTimeStr : undefined} />
+                    <span className="text-gray-300 dark:text-slate-600 text-xs">–</span>
+                    <TimeSelect value={endTimeInput} onChange={setEndTimeInput} min={startTimeInput || undefined} />
 
                     {availableIds !== null && (
-                        <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-xs font-semibold text-green-700 dark:text-green-400">
-                            <CheckCircle2 size={13} />
-                            {filteredRooms.length} sala{filteredRooms.length !== 1 ? "s" : ""} disponíve{filteredRooms.length !== 1 ? "is" : "l"}
-                        </div>
+                        <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
+                            <CheckCircle2 size={11} />
+                            {filteredRooms.length} disponíve{filteredRooms.length !== 1 ? "is" : "l"}
+                        </span>
                     )}
 
-                    <div className="flex gap-2 ml-auto">
-                        {hasActiveFilters && (
-                            <button
-                                onClick={clearFilters}
-                                className="px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-colors"
-                            >
-                                Limpar
-                            </button>
-                        )}
-                        <button
-                            onClick={applyFilters}
-                            disabled={availabilityLoading}
-                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2"
-                        >
-                            {availabilityLoading ? (
-                                <>
-                                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                    A verificar...
-                                </>
-                            ) : "Filtrar"}
-                        </button>
-                    </div>
+                    <button onClick={applyFilters} disabled={availabilityLoading}
+                        className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition-colors">
+                        {availabilityLoading
+                            ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" /> A verificar...</>
+                            : <><Search size={11} /> Pesquisar</>
+                        }
+                    </button>
                 </div>
             </div>
 
@@ -460,10 +465,6 @@ export default function Rooms() {
                 <span className="flex items-center gap-1.5 text-gray-600 dark:text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-green-500" />
                     <span className="font-semibold">{stats.disponiveis}</span> Disponíveis
-                </span>
-                <span className="flex items-center gap-1.5 text-gray-600 dark:text-slate-300">
-                    <span className="w-2 h-2 rounded-full bg-orange-500" />
-                    <span className="font-semibold">{stats.ocupadas}</span> Ocupadas
                 </span>
                 <span className="flex items-center gap-1.5 text-gray-600 dark:text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-red-500" />

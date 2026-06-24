@@ -383,7 +383,6 @@ export default function Landing() {
           <div className="flex flex-col lg:flex-row items-center gap-16">
             {/* Texto */}
             <div className="flex-1 text-center lg:text-left">
-              <Badge>Plataforma Institucional</Badge>
 
               <h1 className="mt-6 text-gray-900 font-black leading-[1.1]"
                 style={{ fontSize: "clamp(2.2rem,4.5vw,3.4rem)", letterSpacing: "-1.5px" }}>
@@ -455,8 +454,7 @@ export default function Landing() {
       <section id="funcionalidades" className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <Badge>Funcionalidades</Badge>
-            <h2 className="mt-4 text-gray-900 font-black"
+            <h2 className="text-gray-900 font-black"
               style={{ fontSize: "clamp(1.8rem,3.5vw,2.6rem)", letterSpacing: "-1px" }}>
               O que o sistema oferece.
             </h2>
@@ -505,8 +503,7 @@ export default function Landing() {
           {/* Steps */}
           <div className="flex-1 flex flex-col gap-9">
             <div className="text-center lg:text-left">
-              <Badge>Como Funciona</Badge>
-              <h2 className="mt-4 text-gray-900 font-black"
+              <h2 className="text-gray-900 font-black"
                 style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", letterSpacing: "-1px" }}>
                 Em 3 passos.
               </h2>
@@ -538,8 +535,7 @@ export default function Landing() {
 
           {/* Texto */}
           <div className="flex-1 text-center lg:text-left">
-            <Badge>Disponível em Qualquer Dispositivo</Badge>
-            <h2 className="mt-4 text-gray-900 font-black"
+            <h2 className="text-gray-900 font-black"
               style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", letterSpacing: "-1px" }}>
               Funciona no telemóvel<br />como uma aplicação.
             </h2>
@@ -644,8 +640,7 @@ export default function Landing() {
       {/* ── PERFIS DE ACESSO ── */}
       <section id="perfis" className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto text-center">
-          <Badge>Perfis de Acesso</Badge>
-          <h2 className="mt-4 text-gray-900 font-black mb-3"
+          <h2 className="text-gray-900 font-black mb-3"
             style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", letterSpacing: "-1px" }}>
             Três perfis, três níveis de acesso.
           </h2>
@@ -719,8 +714,7 @@ export default function Landing() {
         style={{ background: "linear-gradient(160deg, #f8faff 0%, #eef4ff 100%)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <Badge>Perguntas Frequentes</Badge>
-            <h2 className="mt-4 text-gray-900 font-black"
+            <h2 className="text-gray-900 font-black"
               style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", letterSpacing: "-1px" }}>
               Dúvidas mais comuns.
             </h2>

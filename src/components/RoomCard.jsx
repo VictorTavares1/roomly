@@ -85,7 +85,7 @@ export default function RoomCard({
                 <span
                     className={`text-[11px] font-bold px-2.5 py-1 rounded-full tracking-wide ${badge}`}
                 >
-                    {status}
+                    {displayStatus}
                 </span>
             </div>
 

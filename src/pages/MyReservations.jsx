@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Trash2, Clock, MapPin, Pencil, History, CalendarCheck, CalendarDays, Calendar } from "lucide-react";
+import { Trash2, Clock, MapPin, Pencil, History, CalendarCheck, CalendarDays, Calendar, CalendarPlus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
@@ -10,6 +10,7 @@ export default function MyReservations() {
     const { user } = useAuth();
     const [reservations, setReservations] = useState([]);
     const [tab, setTab] = useState("upcoming");
+    const [search, setSearch] = useState("");
     const [now, setNow] = useState(new Date());
     const navigate = useNavigate();
 
@@ -82,71 +83,132 @@ export default function MyReservations() {
         return { label: "Confirmada", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" };
     };
 
-    const EmptyState = ({ message, sub }) => (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400 dark:text-slate-500">
-            <Calendar size={36} className="opacity-20" />
-            <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{message}</p>
-            <p className="text-xs">{sub}</p>
+    const EmptyState = ({ isUpcoming }) => (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-slate-700/50 flex items-center justify-center">
+                <Calendar size={28} className="text-gray-300 dark:text-slate-600" />
+            </div>
+            <div className="text-center">
+                <p className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+                    {isUpcoming ? "Nenhuma reserva agendada" : "Sem histórico de reservas"}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                    {isUpcoming ? "As tuas próximas reservas aparecerão aqui." : "As reservas concluídas e canceladas aparecerão aqui."}
+                </p>
+            </div>
         </div>
     );
 
-    const items = tab === "upcoming" ? upcoming : past;
+    const allItems = tab === "upcoming" ? upcoming : past;
+    const items = search.trim()
+        ? allItems.filter(r =>
+            r.room_name?.toLowerCase().includes(search.toLowerCase()) ||
+            r.purpose?.toLowerCase().includes(search.toLowerCase())
+        )
+        : allItems;
     const showActions = tab === "upcoming";
+
+    const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "—";
+
+    // Agrupa por data (YYYY-MM-DD)
+    const groupedItems = items.reduce((acc, r) => {
+        const day = r.start_time?.slice(0, 10) || "unknown";
+        if (!acc[day]) acc[day] = [];
+        acc[day].push(r);
+        return acc;
+    }, {});
+
+    const formatDayHeader = (dateStr) => {
+        if (dateStr === "unknown") return "Data desconhecida";
+        const d = new Date(dateStr + "T00:00:00");
+        const today = new Date(); today.setHours(0,0,0,0);
+        const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+        if (d.getTime() === today.getTime()) return "Hoje";
+        if (d.getTime() === yesterday.getTime()) return "Ontem";
+        return d.toLocaleDateString("pt-PT", { day: "numeric", month: "long", year: "numeric" });
+    };
 
     return (
         <Layout>
-            {/* Header — uniforme com o resto do sistema */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2.5">
-                        <CalendarDays size={22} className="text-blue-500" />
-                        Minhas Reservas
-                    </h1>
-                    <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
-                        Gere e acompanha as tuas reservas de espaços.
-                    </p>
+            {/* Header */}
+            <div className="mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2.5">
+                            <CalendarDays size={22} className="text-blue-500" />
+                            Minhas Reservas
+                        </h1>
+                        <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
+                            Os teus agendamentos de espaços num só lugar.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => navigate("/rooms")}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors w-fit"
+                    >
+                        <CalendarPlus size={15} /> Nova Reserva
+                    </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex bg-gray-100 dark:bg-slate-700 rounded-xl p-1 gap-1 w-fit">
+                <div className="flex border-b border-gray-100 dark:border-slate-700 gap-1">
                     <button
-                        onClick={() => setTab("upcoming")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        onClick={() => { setTab("upcoming"); setSearch(""); }}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${
                             tab === "upcoming"
-                                ? "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 shadow-sm"
-                                : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                                : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
                         }`}
                     >
                         <CalendarCheck size={15} />
                         Próximas
-                        <span className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                            tab === "upcoming"
+                                ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                                : "bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400"
+                        }`}>
                             {upcoming.length}
                         </span>
                     </button>
                     <button
-                        onClick={() => setTab("past")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        onClick={() => { setTab("past"); setSearch(""); }}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${
                             tab === "past"
-                                ? "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 shadow-sm"
-                                : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                                : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
                         }`}
                     >
                         <History size={15} />
                         Histórico
-                        <span className="text-xs bg-gray-200 text-gray-600 dark:bg-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded-full">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                            tab === "past"
+                                ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                                : "bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400"
+                        }`}>
                             {past.length}
                         </span>
                     </button>
                 </div>
+
+                {/* Pesquisa — só no histórico */}
+                {tab === "past" && (
+                    <div className="relative mt-4">
+                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Pesquisar por sala ou motivo..."
+                            className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Conteúdo */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
+            <div className={`bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden ${tab === "past" ? "mt-4" : ""}`}>
                 {items.length === 0 ? (
-                    <EmptyState
-                        message={tab === "upcoming" ? "Não tens reservas próximas." : "Ainda não tens reservas no histórico."}
-                        sub={tab === "upcoming" ? "Cria uma nova reserva na página de Salas." : "As reservas concluídas e canceladas aparecerão aqui."}
-                    />
+                    <EmptyState isUpcoming={tab === "upcoming"} />
                 ) : (
                     <>
                         {/* Tabela — desktop */}
@@ -161,32 +223,38 @@ export default function MyReservations() {
                                         {showActions && <th className="px-5 py-3.5 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider text-right">Ações</th>}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50 dark:divide-slate-700/60">
-                                    {items.map((reserva) => {
+                                <tbody>
+                                    {Object.entries(groupedItems).map(([day, dayItems]) => (
+                                        <>
+                                            <tr key={`group-${day}`}>
+                                                <td colSpan={showActions ? 5 : 4} className="px-5 pt-5 pb-2">
+                                                    <span className="text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                                                        {formatDayHeader(day)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {dayItems.map((reserva) => {
                                         const { label, cls } = statusStyle(reserva);
                                         const start = new Date(reserva.start_time.replace(" ", "T"));
                                         const isOngoing = now >= start && !Number(reserva.is_past) && reserva.status !== "cancelada";
                                         return (
-                                            <tr key={reserva.id} className={`transition-colors ${Number(reserva.is_past) || reserva.status === "cancelada" ? "opacity-60" : "hover:bg-gray-50 dark:hover:bg-slate-700/30"}`}>
-                                                <td className="px-5 py-4">
+                                            <tr key={reserva.id} className={`border-t border-gray-50 dark:border-slate-700/60 transition-colors ${Number(reserva.is_past) || reserva.status === "cancelada" ? "opacity-60" : "hover:bg-gray-50 dark:hover:bg-slate-700/30"}`}>
+                                                <td className="px-5 py-3">
                                                     <div className="flex items-center gap-2">
                                                         <MapPin size={14} className="text-blue-500 shrink-0" />
                                                         <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">{reserva.room_name}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <p className="text-sm font-semibold text-gray-800 dark:text-slate-200">
-                                                        {new Date(reserva.start_time).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" })}
-                                                    </p>
-                                                    <span className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mt-1">
+                                                <td className="px-5 py-3">
+                                                    <span className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
                                                         <Clock size={10} />
                                                         {new Date(reserva.start_time).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })} – {new Date(reserva.end_time).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-4 text-sm text-gray-500 dark:text-slate-400 italic max-w-[200px] truncate">
-                                                    "{reserva.purpose}"
+                                                <td className="px-5 py-3 text-sm text-gray-600 dark:text-slate-300 max-w-[200px] truncate">
+                                                    {capitalize(reserva.purpose)}
                                                 </td>
-                                                <td className="px-5 py-4">
+                                                <td className="px-5 py-3">
                                                     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cls}`}>
                                                         <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
                                                         {label}
@@ -227,18 +295,27 @@ export default function MyReservations() {
                                             </tr>
                                         );
                                     })}
+                                        </>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
 
                         {/* Cards — mobile */}
-                        <div className="md:hidden divide-y divide-gray-50 dark:divide-slate-700/60">
-                            {items.map((reserva) => {
+                        <div className="md:hidden">
+                            {Object.entries(groupedItems).map(([day, dayItems]) => (
+                                <div key={`m-group-${day}`}>
+                                    <div className="px-4 pt-4 pb-1">
+                                        <span className="text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                                            {formatDayHeader(day)}
+                                        </span>
+                                    </div>
+                                    {dayItems.map((reserva) => {
                                 const { label, cls } = statusStyle(reserva);
                                 const start = new Date(reserva.start_time.replace(" ", "T"));
                                 const isOngoing = now >= start && !Number(reserva.is_past) && reserva.status !== "cancelada";
                                 return (
-                                    <div key={reserva.id} className={`p-4 flex flex-col gap-3 ${Number(reserva.is_past) || reserva.status === "cancelada" ? "opacity-60" : ""}`}>
+                                    <div key={reserva.id} className={`p-4 border-t border-gray-50 dark:border-slate-700/60 flex flex-col gap-3 ${Number(reserva.is_past) || reserva.status === "cancelada" ? "opacity-60" : ""}`}>
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-center gap-2">
                                                 <MapPin size={14} className="text-blue-500 shrink-0" />
@@ -257,7 +334,7 @@ export default function MyReservations() {
                                                 {new Date(reserva.start_time).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })} – {new Date(reserva.end_time).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-400 dark:text-slate-500 italic pl-5">"{reserva.purpose}"</p>
+                                        <p className="text-xs text-gray-500 dark:text-slate-400 pl-5">{capitalize(reserva.purpose)}</p>
                                         {showActions && (
                                             <div className="flex gap-2 pl-5">
                                                 <button
@@ -288,6 +365,8 @@ export default function MyReservations() {
                                     </div>
                                 );
                             })}
+                                </div>
+                            ))}
                         </div>
                     </>
                 )}
