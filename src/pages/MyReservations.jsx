@@ -343,8 +343,8 @@ export default function MyReservations() {
                     </button>
                 </div>
 
-                {/* Pesquisa + filtro — só no histórico */}
-                {tab === "past" && (
+                {/* Pesquisa + filtro */}
+                {(
                     <div className="flex gap-3 mt-4">
                         <div className="relative flex-1">
                             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />

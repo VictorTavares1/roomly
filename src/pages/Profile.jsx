@@ -49,11 +49,11 @@ export default function Profile() {
             <div className="flex justify-center">
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 w-full max-w-lg transition-colors">
                     <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                            <User size={40} />
+                        <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
+                            <User size={36} className="text-gray-400 dark:text-slate-500" />
                         </div>
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-200">{user?.name}</h1>
-                        <p className="text-gray-500 dark:text-slate-400 capitalize">{user?.role}</p>
+                        <p className="text-sm text-gray-400 dark:text-slate-500 mt-0.5">{user?.email}</p>
                     </div>
 
                     <hr className="mb-6 border-gray-100 dark:border-slate-700" />

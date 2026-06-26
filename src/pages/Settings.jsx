@@ -27,8 +27,6 @@ export default function Settings() {
         }
     }, [user]);
 
-    const roleLabel = { admin: "Administrador", funcionario: "Funcionário", professor: "Professor" };
-
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -119,21 +117,12 @@ export default function Settings() {
                     {activeTab === "profile" && (
                         <div className="animate-fadeIn">
                             <div className="flex items-center gap-6 mb-8 border-b border-gray-100 dark:border-slate-700 pb-6">
-                                <div
-                                    className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white shrink-0 shadow-md"
-                                    style={{ background: `linear-gradient(135deg, ${getAvatarColors(user?.name)[0]}, ${getAvatarColors(user?.name)[1]})` }}
-                                >
-                                    {getInitials(user?.name)}
+                                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                                    <User size={36} className="text-gray-400 dark:text-slate-500" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200">{user?.name}</h2>
                                     <p className="text-gray-500 dark:text-slate-400 text-sm">{user?.email}</p>
-                                    <span
-                                        className="inline-block mt-2 px-3 py-1 text-xs font-bold rounded-full text-white"
-                                        style={{ background: `linear-gradient(135deg, ${getAvatarColors(user?.name)[0]}, ${getAvatarColors(user?.name)[1]})` }}
-                                    >
-                                        {roleLabel[user?.role] || user?.role}
-                                    </span>
                                 </div>
                             </div>
 

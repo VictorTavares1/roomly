@@ -385,7 +385,7 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                         <Avatar name={user?.name} size="md" />
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 truncate leading-tight">{user?.name || "Utilizador"}</p>
-                            <p className="text-[11px] truncate mt-0.5" style={{ color: from }}>{roleLabel[user?.role] || user?.role}</p>
+                            <p className="text-[11px] text-gray-400 dark:text-slate-500 truncate mt-0.5">{user?.email || ""}</p>
                         </div>
                     </Link>
                 ) : (
