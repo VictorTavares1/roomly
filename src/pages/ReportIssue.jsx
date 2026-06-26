@@ -253,6 +253,7 @@ export default function ReportIssue() {
         e.preventDefault();
         if (!selectedRoom) { toast.error("Seleciona uma sala."); return; }
         if (!description.trim()) { toast.error("Descreve o problema."); return; }
+        if (description.trim().length < 10) { toast.error("A descrição deve ter pelo menos 10 caracteres."); return; }
         setSubmitting(true);
         try {
             const res = await reportService.create({ user_id: user.id, room_id: selectedRoom, description: description.trim(), image });

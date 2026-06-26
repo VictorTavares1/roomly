@@ -4,26 +4,22 @@ import {
     LayoutDashboard, MapPin, Calendar, AlertTriangle,
     Wrench, Users, BookOpen, Settings,
     LogOut, Sun, Moon, Search, X, Menu, ChevronRight,
-    Building2, CalendarCheck, Download, QrCode
+    Building2, CalendarCheck, Download, QrCode, User
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "./Logo";
 import { roomService, reservationService } from "../services/api";
-import { getAvatarColors, getInitials } from "../utils/avatar";
 
-function Avatar({ name, size = "md" }) {
-    const [from, to] = getAvatarColors(name || "");
-    const sizeClass = size === "sm" ? "w-7 h-7 text-[10px]"
-        : size === "md" ? "w-8 h-8 text-xs"
-        : "w-10 h-10 text-sm";
+function Avatar({ size = "md" }) {
+    const sizeClass = size === "sm" ? "w-7 h-7"
+        : size === "md" ? "w-8 h-8"
+        : "w-10 h-10";
+    const iconSize = size === "sm" ? 14 : size === "md" ? 16 : 20;
     return (
-        <div
-            className={`${sizeClass} rounded-full flex items-center justify-center shrink-0 font-bold text-white shadow-sm`}
-            style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
-        >
-            {getInitials(name || "")}
+        <div className={`${sizeClass} rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center shrink-0`}>
+            <User size={iconSize} className="text-gray-400 dark:text-slate-500" />
         </div>
     );
 }
@@ -228,7 +224,6 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
     const { theme, toggleTheme } = useTheme();
     const isAdmin = user?.role === "admin";
     const isStaff = user?.role === "admin" || user?.role === "funcionario";
-    const [from] = getAvatarColors(user?.name || "");
 
     return (
         <div className="flex flex-col h-full min-h-0 overflow-hidden">
@@ -286,12 +281,12 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                     <>
                         <SectionLabel label="Administração" collapsed={collapsed} />
                         <NavItem to="/manage-reports" icon={Wrench} label="Manutenção" onClick={onClose} collapsed={collapsed} />
+                        <NavItem to="/manage-reservations" icon={BookOpen} label="Gerir Reservas" onClick={onClose} collapsed={collapsed} />
+                        <NavItem to="/qr-codes" icon={QrCode} label="QR Codes" onClick={onClose} collapsed={collapsed} />
                         {isAdmin && (
                             <>
                                 <NavItem to="/manage-rooms" icon={Building2} label="Gerir Salas" onClick={onClose} collapsed={collapsed} />
                                 <NavItem to="/manage-users" icon={Users} label="Gerir Utilizadores" onClick={onClose} collapsed={collapsed} />
-                                <NavItem to="/manage-reservations" icon={BookOpen} label="Gerir Reservas" onClick={onClose} collapsed={collapsed} />
-                                <NavItem to="/qr-codes" icon={QrCode} label="QR Codes" onClick={onClose} collapsed={collapsed} />
                             </>
                         )}
                     </>

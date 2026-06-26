@@ -121,14 +121,17 @@ export default function Rooms() {
             .then((data) => setRooms(Array.isArray(data) ? data : []))
             .catch((err) => console.error(err));
 
-        reservationService
-            .getAll()
+        const fetchReservations = isAdmin || user?.role === "funcionario"
+            ? reservationService.getAll()
+            : reservationService.getMyReservations();
+
+        fetchReservations
             .then((data) => {
                 const list = Array.isArray(data) ? data : [];
                 setWeeklyMap(computeWeeklyHoursMap(list));
             })
             .catch(() => setWeeklyMap({}));
-    }, []);
+    }, [isAdmin, user?.role]);
 
     useEffect(() => {
         fetchRooms();

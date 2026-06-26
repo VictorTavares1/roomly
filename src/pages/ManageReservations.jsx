@@ -1,12 +1,17 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Trash2, Calendar, Clock, MapPin, Search, ShieldCheck, Filter, ChevronDown } from "lucide-react";
+import { Trash2, Calendar, Clock, MapPin, Search, ShieldCheck, Filter, ChevronDown, Pencil, Save, X, AlignLeft } from "lucide-react";
 import Pagination from "../components/Pagination";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
-import { reservationService } from "../services/api";
+import { reservationService, roomService } from "../services/api";
 import { translateMessage } from "../utils/translations";
+import TimeSelect from "../components/TimeSelect";
+import DateSelect from "../components/DateSelect";
+import { useAuth } from "../context/AuthContext";
 
 export default function ManageReservations() {
+    const { user } = useAuth();
+    const isAdmin = user?.role === "admin";
     const [reservations, setReservations] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState("todos");
@@ -65,6 +70,69 @@ export default function ManageReservations() {
         ), { duration: 10000 });
     };
 
+    // Modal de edição
+    const [editModal, setEditModal] = useState(null);
+    const [editForm, setEditForm] = useState({ roomId: "", date: "", startTime: "", endTime: "", purpose: "" });
+    const [editRooms, setEditRooms] = useState([]);
+    const [editLoading, setEditLoading] = useState(false);
+
+    const openEdit = (reserva) => {
+        const start = new Date(reserva.start_time);
+        const end = new Date(reserva.end_time);
+        setEditForm({
+            roomId: String(reserva.rooms_id || reserva.room_id || ""),
+            date: start.toISOString().slice(0, 10),
+            startTime: start.toTimeString().slice(0, 5),
+            endTime: end.toTimeString().slice(0, 5),
+            purpose: reserva.purpose || "",
+        });
+        setEditModal(reserva);
+        if (editRooms.length === 0) roomService.getAll().then(setEditRooms).catch(() => {});
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        if (editForm.startTime >= editForm.endTime) {
+            toast.error("A hora de fim tem de ser depois do início.");
+            return;
+        }
+        const [sh, sm] = editForm.startTime.split(":").map(Number);
+        const [eh, em] = editForm.endTime.split(":").map(Number);
+        if ((eh * 60 + em) - (sh * 60 + sm) < 15) {
+            toast.error("A reserva deve ter pelo menos 15 minutos de duração.");
+            return;
+        }
+        if (editForm.purpose.trim().length < 3) {
+            toast.error("O motivo deve ter pelo menos 3 caracteres.");
+            return;
+        }
+        if (editForm.purpose.trim().length > 200) {
+            toast.error("O motivo não pode ter mais de 200 caracteres.");
+            return;
+        }
+        setEditLoading(true);
+        try {
+            const res = await reservationService.update({
+                id: editModal.id,
+                rooms_id: editForm.roomId,
+                start_time: `${editForm.date} ${editForm.startTime}:00`,
+                end_time: `${editForm.date} ${editForm.endTime}:00`,
+                purpose: editForm.purpose,
+            });
+            if (res.status === "sucesso") {
+                toast.success("Reserva atualizada com sucesso!");
+                fetchReservations();
+                setEditModal(null);
+            } else {
+                toast.error(translateMessage(res.mensagem) || "Erro ao atualizar reserva.");
+            }
+        } catch (err) {
+            toast.error(translateMessage(err.message) || "Erro ao atualizar reserva.");
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
     const now = new Date();
     const filteredReservations = reservations.filter((reserva) => {
         const term = searchTerm.toLowerCase();
@@ -83,6 +151,8 @@ export default function ManageReservations() {
     const totalPages = Math.ceil(filteredReservations.length / PER_PAGE);
     const pagedReservations = filteredReservations.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
+    const canAct = (reserva) => new Date(reserva.end_time) > new Date() && reserva.status !== 'cancelada';
+
     return (
         <Layout>
             <div className="mb-7">
@@ -91,7 +161,7 @@ export default function ManageReservations() {
                     Gerir Reservas
                 </h1>
                 <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
-                    Consulta e cancela reservas de todos os utilizadores.
+                    Consulta, edita e cancela reservas de todos os utilizadores.
                 </p>
             </div>
 
@@ -156,11 +226,17 @@ export default function ManageReservations() {
                                 </div>
                                 <span className="font-semibold text-sm text-slate-700 dark:text-slate-300">{reserva.user_name}</span>
                             </div>
-                            {new Date(reserva.end_time) > new Date() && reserva.status !== 'cancelada' && (
-                                <button onClick={() => handleDelete(reserva.id)} title="Cancelar reserva"
-                                    className="cursor-pointer p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                    <Trash2 size={14} />
-                                </button>
+                            {isAdmin && canAct(reserva) && (
+                                <div className="flex items-center gap-1">
+                                    <button onClick={() => openEdit(reserva)} title="Editar reserva"
+                                        className="cursor-pointer p-2 rounded-lg text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button onClick={() => handleDelete(reserva.id)} title="Cancelar reserva"
+                                        className="cursor-pointer p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
                             )}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400">
@@ -193,7 +269,7 @@ export default function ManageReservations() {
                                 <th className="px-5 py-3.5 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">Sala</th>
                                 <th className="px-5 py-3.5 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">Data / Hora</th>
                                 <th className="px-5 py-3.5 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">Motivo</th>
-                                <th className="px-5 py-3.5 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider text-right">Ação</th>
+                                {isAdmin && <th className="px-5 py-3.5 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider text-right">Ação</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50 dark:divide-slate-700/60">
@@ -222,16 +298,24 @@ export default function ManageReservations() {
                                         </div>
                                     </td>
                                     <td className="px-5 py-4 text-gray-500 dark:text-slate-400 text-sm">"{reserva.purpose}"</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex justify-end">
-                                            {new Date(reserva.end_time) > new Date() && reserva.status !== 'cancelada' && (
-                                                <button onClick={() => handleDelete(reserva.id)} title="Cancelar reserva"
-                                                    className="cursor-pointer p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                                    <Trash2 size={15} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
+                                    {isAdmin && (
+                                        <td className="px-5 py-4">
+                                            <div className="flex justify-end gap-1">
+                                                {canAct(reserva) && (
+                                                    <>
+                                                        <button onClick={() => openEdit(reserva)} title="Editar reserva"
+                                                            className="cursor-pointer p-2 rounded-lg text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                                            <Pencil size={15} />
+                                                        </button>
+                                                        <button onClick={() => handleDelete(reserva.id)} title="Cancelar reserva"
+                                                            className="cursor-pointer p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -239,6 +323,78 @@ export default function ManageReservations() {
                 )}
                 <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
+
+            {/* Modal de Edição */}
+            {editModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setEditModal(null)}>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+                            <div>
+                                <p className="font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+                                    <Pencil size={15} className="text-blue-500" /> Editar Reserva
+                                </p>
+                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{editModal.user_name} · {editModal.room_name}</p>
+                            </div>
+                            <button onClick={() => setEditModal(null)} className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Sala</label>
+                                <div className="relative">
+                                    <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    <select
+                                        value={editForm.roomId}
+                                        onChange={e => setEditForm(f => ({ ...f, roomId: e.target.value }))}
+                                        className="cursor-pointer w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all appearance-none"
+                                        required
+                                    >
+                                        {editRooms.map(r => (
+                                            <option key={r.id} value={r.id}>{r.name} (Cap: {r.capacity})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <DateSelect
+                                label="Data"
+                                value={editForm.date}
+                                onChange={v => setEditForm(f => ({ ...f, date: v }))}
+                                required
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                                <TimeSelect label="Hora Início" value={editForm.startTime} onChange={v => setEditForm(f => ({ ...f, startTime: v }))} required />
+                                <TimeSelect label="Hora Fim" value={editForm.endTime} onChange={v => setEditForm(f => ({ ...f, endTime: v }))} min={editForm.startTime || undefined} required />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Motivo</label>
+                                <div className="relative">
+                                    <AlignLeft size={15} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        value={editForm.purpose}
+                                        onChange={e => setEditForm(f => ({ ...f, purpose: e.target.value }))}
+                                        placeholder="Ex: Aula de Apoio"
+                                        required
+                                        className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setEditModal(null)}
+                                    className="cursor-pointer flex-1 py-2.5 text-sm font-semibold text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={editLoading}
+                                    className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl transition-colors">
+                                    <Save size={14} />
+                                    {editLoading ? "A guardar..." : "Guardar Alterações"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }

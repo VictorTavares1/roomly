@@ -66,12 +66,12 @@ export default function App() {
 
       {/* QR Code */}
       <Route path="/qr-checkin" element={<PrivateRoute><QRCheckin /></PrivateRoute>} />
-      <Route path="/qr-codes" element={<AdminRoute><QRCodes /></AdminRoute>} />
+      <Route path="/qr-codes" element={<StaffRoute><QRCodes /></StaffRoute>} />
 
       {/* Rotas de Admin (só admin) */}
       <Route path="/manage-rooms" element={<AdminRoute><ManageRooms /></AdminRoute>} />
       <Route path="/manage-users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
-      <Route path="/manage-reservations" element={<AdminRoute><ManageReservations /></AdminRoute>} />
+      <Route path="/manage-reservations" element={<StaffRoute><ManageReservations /></StaffRoute>} />
 
       {/* Qualquer outra rota vai para a Landing Page */}
       <Route path="*" element={<Navigate to="/" />} />
