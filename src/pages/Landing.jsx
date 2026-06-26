@@ -5,7 +5,7 @@ import {
   Bell, Settings2, Search,
   MapPin, Calendar, Plus, Minus
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Logo from "../components/Logo";
 import { useFadeNavigate } from "../hooks/useFadeNavigate";
 
@@ -303,6 +303,13 @@ function ReservationMock() {
 export default function Landing() {
   const go = useFadeNavigate();
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+    return () => { if (wasDark) root.classList.add("dark"); };
+  }, []);
+
   const faqs = [
     {
       question: "Como obtenho acesso ao sistema?",
@@ -387,10 +394,7 @@ export default function Landing() {
               <h1 className="mt-6 text-gray-900 font-black leading-[1.1]"
                 style={{ fontSize: "clamp(2.2rem,4.5vw,3.4rem)", letterSpacing: "-1.5px" }}>
                 Gestão de espaços<br />
-                escolares,{" "}
-                <span style={{ color: BLUE }}>
-                  sem complicações.
-                </span>
+                escolares, sem complicações.
               </h1>
 
               <p className="mt-5 text-gray-500 text-base leading-relaxed max-w-[480px] mx-auto lg:mx-0">
@@ -400,8 +404,8 @@ export default function Landing() {
 
               <div className="mt-9 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
                 <button onClick={() => go("/login")}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-white font-semibold text-sm transition-colors hover:brightness-110"
-                  style={{ background: BLUE, boxShadow: "0 8px 28px rgba(30,102,255,0.38)" }}>
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-white font-semibold text-sm transition-colors hover:opacity-90"
+                  style={{ background: BLUE }}>
                   Aceder ao Sistema <ArrowRight size={16} />
                 </button>
                 <a href="#funcionalidades"

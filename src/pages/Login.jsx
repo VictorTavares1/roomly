@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Eye, EyeOff, Loader } from "lucide-react";
 import toast from "react-hot-toast";
@@ -9,6 +9,13 @@ import { useFadeNavigate } from "../hooks/useFadeNavigate";
 export default function Login() {
   const { login } = useAuth();
   const go = useFadeNavigate();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+    return () => { if (wasDark) root.classList.add("dark"); };
+  }, []);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -209,8 +216,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 style={{
-                  background: "linear-gradient(135deg, #1e66ff, #4da3ff)",
-                  boxShadow: "0 4px 20px rgba(30,102,255,0.35)"
+                  background: "#1e66ff"
                 }}
               >
                 {loading ? <Loader className="animate-spin" size={18} /> : "Entrar"}

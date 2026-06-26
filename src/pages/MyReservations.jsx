@@ -1,17 +1,38 @@
-import { useEffect, useState, useCallback } from "react";
-import { Trash2, Clock, MapPin, Pencil, History, CalendarCheck, CalendarDays, Calendar, CalendarPlus, Search } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Trash2, Clock, MapPin, Pencil, History, CalendarCheck, CalendarDays, Calendar, CalendarPlus, Search, Filter, ChevronDown, QrCode, CheckCircle2, Save, AlignLeft, X } from "lucide-react";
+import Pagination from "../components/Pagination";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
-import { reservationService } from "../services/api";
+import { reservationService, roomService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import TimeSelect from "../components/TimeSelect";
+import DateSelect from "../components/DateSelect";
+import { translateMessage } from "../utils/translations";
 
 export default function MyReservations() {
     const { user } = useAuth();
     const [reservations, setReservations] = useState([]);
     const [tab, setTab] = useState("upcoming");
     const [search, setSearch] = useState("");
+    const [filterStatus, setFilterStatus] = useState("todos");
+    const [filterOpen, setFilterOpen] = useState(false);
+    const filterRef = useRef(null);
     const [now, setNow] = useState(new Date());
+
+    const FILTERS = [
+        { key: "todos",       label: "Todos"        },
+        { key: "AULA",        label: "Aula"         },
+        { key: "LABORATÓRIO", label: "Laboratório"  },
+        { key: "REUNIÃO",     label: "Reunião"      },
+        { key: "AUDITÓRIO",   label: "Auditório"    },
+    ];
+
+    useEffect(() => {
+        const handler = (e) => { if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false); };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -75,12 +96,137 @@ export default function MyReservations() {
         ), { duration: 10000 });
     };
 
+    // Modal de edição
+    const [editModal, setEditModal] = useState(null);
+    const [editForm, setEditForm] = useState({ roomId: "", date: "", startTime: "", endTime: "", purpose: "" });
+    const [editRooms, setEditRooms] = useState([]);
+    const [editLoading, setEditLoading] = useState(false);
+
+    const openEdit = (reserva) => {
+        const start = new Date(reserva.start_time);
+        const end = new Date(reserva.end_time);
+        setEditForm({
+            roomId: String(reserva.rooms_id || reserva.room_id || ""),
+            date: start.toISOString().slice(0, 10),
+            startTime: start.toTimeString().slice(0, 5),
+            endTime: end.toTimeString().slice(0, 5),
+            purpose: reserva.purpose || "",
+        });
+        setEditModal(reserva);
+        if (editRooms.length === 0) roomService.getAll().then(setEditRooms).catch(() => {});
+    };
+
+    const closeEdit = () => { setEditModal(null); };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        if (editForm.startTime >= editForm.endTime) {
+            toast.error("A hora de fim tem de ser depois do início.");
+            return;
+        }
+
+        const [sh, sm] = editForm.startTime.split(":").map(Number);
+        const [eh, em] = editForm.endTime.split(":").map(Number);
+        if ((eh * 60 + em) - (sh * 60 + sm) < 15) {
+            toast.error("A reserva deve ter pelo menos 15 minutos de duração.");
+            return;
+        }
+
+        if (editForm.purpose.trim().length < 3) {
+            toast.error("O motivo deve ter pelo menos 3 caracteres.");
+            return;
+        }
+
+        if (editForm.purpose.trim().length > 200) {
+            toast.error("O motivo não pode ter mais de 200 caracteres.");
+            return;
+        }
+        setEditLoading(true);
+        try {
+            const res = await reservationService.update({
+                id: editModal.id,
+                rooms_id: editForm.roomId,
+                start_time: `${editForm.date} ${editForm.startTime}:00`,
+                end_time: `${editForm.date} ${editForm.endTime}:00`,
+                purpose: editForm.purpose,
+            });
+            if (res.status === "sucesso") {
+                toast.success("Reserva atualizada com sucesso!");
+                fetchReservations();
+                closeEdit();
+            } else {
+                toast.error(translateMessage(res.mensagem) || "Erro ao atualizar reserva.");
+            }
+        } catch (err) {
+            toast.error(translateMessage(err.message) || "Erro ao atualizar reserva.");
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
+    // Verifica se a reserva está dentro da janela de check-in (5 min antes até 15 min depois do início)
+    const canCheckin = (reserva) => {
+        if (reserva.status !== "pendente") return false;
+        if (Number(reserva.is_past)) return false;
+        const start = new Date(reserva.start_time.replace(" ", "T"));
+        const diffMs = now - start;
+        const diffMin = diffMs / 60000;
+        return diffMin >= -5 && diffMin <= 15;
+    };
+
+    const [checkinModal, setCheckinModal] = useState(null); // { reserva }
+    const scannerRef = useRef(null);
+
+    const openCheckin = (reserva) => setCheckinModal({ reserva });
+
+    const closeCheckinModal = () => {
+        if (scannerRef.current) {
+            scannerRef.current.stop().catch(() => {}).finally(() => { scannerRef.current = null; });
+        }
+        setCheckinModal(null);
+    };
+
+    const startQRScanner = useCallback(async () => {
+        if (!checkinModal) return;
+        try {
+            const { Html5Qrcode } = await import("html5-qrcode");
+            const scanner = new Html5Qrcode("qr-modal-reader");
+            scannerRef.current = scanner;
+            await scanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                async (decodedText) => {
+                    await scanner.stop();
+                    scannerRef.current = null;
+                    try {
+                        await reservationService.checkin(decodedText);
+                        setReservations(prev => prev.map(r =>
+                            r.id === checkinModal.reserva.id ? { ...r, status: "confirmada" } : r
+                        ));
+                        setCheckinModal(null);
+                        toast.success(`Check-in confirmado em ${checkinModal.reserva.room_name}!`);
+                    } catch (err) {
+                        toast.error(err.message || "Erro ao fazer check-in.");
+                        setCheckinModal(null);
+                    }
+                },
+                () => {}
+            );
+        } catch {
+            toast.error("Não foi possível aceder à câmara. Verifica as permissões.");
+            setCheckinModal(null);
+        }
+    }, [checkinModal]);
+
+    useEffect(() => {
+        if (checkinModal) startQRScanner();
+    }, [checkinModal, startQRScanner]);
+
     const statusStyle = (reserva) => {
         if (reserva.status === "cancelada") return { label: "Cancelada", cls: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" };
         if (Number(reserva.is_past)) return { label: "Concluída", cls: "bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400" };
-        const start = new Date(reserva.start_time.replace(" ", "T"));
-        if (now >= start) return { label: "Em curso", cls: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" };
-        return { label: "Confirmada", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" };
+        if (reserva.status === "confirmada") return { label: "Confirmada", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" };
+        return { label: "Pendente", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" };
     };
 
     const EmptyState = ({ isUpcoming }) => (
@@ -99,13 +245,20 @@ export default function MyReservations() {
         </div>
     );
 
+    const [page, setPage] = useState(1);
+    const PER_PAGE = 10;
+
     const allItems = tab === "upcoming" ? upcoming : past;
-    const items = search.trim()
-        ? allItems.filter(r =>
+    const filtered = allItems.filter(r => {
+        const matchSearch = !search.trim() ||
             r.room_name?.toLowerCase().includes(search.toLowerCase()) ||
-            r.purpose?.toLowerCase().includes(search.toLowerCase())
-        )
-        : allItems;
+            r.purpose?.toLowerCase().includes(search.toLowerCase());
+        const matchFilter = filterStatus === "todos" ||
+            (r.room_type || "").toUpperCase() === filterStatus;
+        return matchSearch && matchFilter;
+    });
+    const totalPages = Math.ceil(filtered.length / PER_PAGE);
+    const items = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     const showActions = tab === "upcoming";
 
     const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "—";
@@ -153,7 +306,7 @@ export default function MyReservations() {
                 {/* Tabs */}
                 <div className="flex border-b border-gray-100 dark:border-slate-700 gap-1">
                     <button
-                        onClick={() => { setTab("upcoming"); setSearch(""); }}
+                        onClick={() => { setTab("upcoming"); setSearch(""); setFilterStatus("todos"); setPage(1); }}
                         className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${
                             tab === "upcoming"
                                 ? "border-blue-600 text-blue-600 dark:text-blue-400"
@@ -171,7 +324,7 @@ export default function MyReservations() {
                         </span>
                     </button>
                     <button
-                        onClick={() => { setTab("past"); setSearch(""); }}
+                        onClick={() => { setTab("past"); setSearch(""); setFilterStatus("todos"); setPage(1); }}
                         className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${
                             tab === "past"
                                 ? "border-blue-600 text-blue-600 dark:text-blue-400"
@@ -190,17 +343,49 @@ export default function MyReservations() {
                     </button>
                 </div>
 
-                {/* Pesquisa — só no histórico */}
+                {/* Pesquisa + filtro — só no histórico */}
                 {tab === "past" && (
-                    <div className="relative mt-4">
-                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Pesquisar por sala ou motivo..."
-                            className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
-                        />
+                    <div className="flex gap-3 mt-4">
+                        <div className="relative flex-1">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                placeholder="Pesquisar por sala ou motivo..."
+                                className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-gray-700 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                            />
+                        </div>
+                        <div ref={filterRef} className="relative shrink-0">
+                            <button
+                                onClick={() => setFilterOpen(v => !v)}
+                                className="cursor-pointer relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 transition-all duration-150"
+                            >
+                                <Filter size={14} />
+                                Filtro
+                                <ChevronDown size={13} className={`transition-transform duration-150 ${filterOpen ? "rotate-180" : ""}`} />
+                                {filterStatus !== "todos" && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white dark:border-slate-800" />
+                                )}
+                            </button>
+                            {filterOpen && (
+                                <div className="absolute right-0 mt-1.5 w-40 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg overflow-hidden z-20">
+                                    {FILTERS.map(f => (
+                                        <button
+                                            key={f.key}
+                                            onClick={() => { setFilterStatus(f.key); setPage(1); setFilterOpen(false); }}
+                                            className={`cursor-pointer w-full text-left px-4 py-2.5 text-sm transition-colors duration-100 ${
+                                                filterStatus === f.key
+                                                    ? "bg-gray-50 dark:bg-slate-700/50 text-gray-800 dark:text-slate-100 font-semibold"
+                                                    : "text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                                            }`}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -236,7 +421,9 @@ export default function MyReservations() {
                                             {dayItems.map((reserva) => {
                                         const { label, cls } = statusStyle(reserva);
                                         const start = new Date(reserva.start_time.replace(" ", "T"));
-                                        const isOngoing = now >= start && !Number(reserva.is_past) && reserva.status !== "cancelada";
+                                        const minutesUntilStart = (start - now) / 60000;
+                                        const canEdit = minutesUntilStart >= 15;
+                                        const canCancel = minutesUntilStart >= 15;
                                         return (
                                             <tr key={reserva.id} className={`border-t border-gray-50 dark:border-slate-700/60 transition-colors ${Number(reserva.is_past) || reserva.status === "cancelada" ? "opacity-60" : "hover:bg-gray-50 dark:hover:bg-slate-700/30"}`}>
                                                 <td className="px-5 py-3">
@@ -263,12 +450,21 @@ export default function MyReservations() {
                                                 {showActions && (
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center justify-end gap-2">
+                                                            {canCheckin(reserva) && (
+                                                                <button
+                                                                    onClick={() => openCheckin(reserva)}
+                                                                    title="Fazer check-in por QR Code"
+                                                                    className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all"
+                                                                >
+                                                                    <QrCode size={13} /> Check-in
+                                                                </button>
+                                                            )}
                                                             <button
-                                                                onClick={() => !isOngoing && navigate("/edit-reservation", { state: { reservation: reserva } })}
-                                                                disabled={isOngoing}
-                                                                title={isOngoing ? "Não é possível editar uma reserva em curso" : "Editar reserva"}
+                                                                onClick={() => canEdit && openEdit(reserva)}
+                                                                disabled={!canEdit}
+                                                                title={!canEdit ? "Não é possível editar com menos de 15 min de antecedência" : "Editar reserva"}
                                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                                                    isOngoing
+                                                                    !canEdit
                                                                         ? "bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-slate-600 cursor-not-allowed"
                                                                         : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50"
                                                                 }`}
@@ -277,11 +473,11 @@ export default function MyReservations() {
                                                                 Editar
                                                             </button>
                                                             <button
-                                                                onClick={() => !isOngoing && handleDelete(reserva.id)}
-                                                                disabled={isOngoing}
-                                                                title={isOngoing ? "Não é possível cancelar uma reserva em curso" : "Cancelar reserva"}
+                                                                onClick={() => canCancel && handleDelete(reserva.id)}
+                                                                disabled={!canCancel}
+                                                                title={!canCancel ? "Só é possível cancelar com 15 min de antecedência" : "Cancelar reserva"}
                                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                                                    isOngoing
+                                                                    !canCancel
                                                                         ? "bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-slate-600 cursor-not-allowed"
                                                                         : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50"
                                                                 }`}
@@ -313,7 +509,9 @@ export default function MyReservations() {
                                     {dayItems.map((reserva) => {
                                 const { label, cls } = statusStyle(reserva);
                                 const start = new Date(reserva.start_time.replace(" ", "T"));
-                                const isOngoing = now >= start && !Number(reserva.is_past) && reserva.status !== "cancelada";
+                                const minutesUntilStart = (start - now) / 60000;
+                                        const canEdit = minutesUntilStart >= 15;
+                                        const canCancel = minutesUntilStart >= 15;
                                 return (
                                     <div key={reserva.id} className={`p-4 border-t border-gray-50 dark:border-slate-700/60 flex flex-col gap-3 ${Number(reserva.is_past) || reserva.status === "cancelada" ? "opacity-60" : ""}`}>
                                         <div className="flex items-start justify-between gap-2">
@@ -336,12 +534,21 @@ export default function MyReservations() {
                                         </div>
                                         <p className="text-xs text-gray-500 dark:text-slate-400 pl-5">{capitalize(reserva.purpose)}</p>
                                         {showActions && (
-                                            <div className="flex gap-2 pl-5">
+                                            <div className="flex gap-2 pl-5 flex-wrap">
+                                                {canCheckin(reserva) && (
+                                                    <button
+                                                        onClick={() => openCheckin(reserva)}
+                                                        className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                                                    >
+                                                        <QrCode size={12} /> Check-in
+                                                    </button>
+                                                )}
                                                 <button
-                                                    onClick={() => !isOngoing && navigate("/edit-reservation", { state: { reservation: reserva } })}
-                                                    disabled={isOngoing}
+                                                    onClick={() => canEdit && openEdit(reserva)}
+                                                    disabled={!canEdit}
+                                                    title={!canEdit ? "Não é possível editar com menos de 15 min de antecedência" : "Editar reserva"}
                                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                                        isOngoing
+                                                        !canEdit
                                                             ? "bg-gray-100 dark:bg-slate-700 text-gray-300 cursor-not-allowed"
                                                             : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                                                     }`}
@@ -349,11 +556,11 @@ export default function MyReservations() {
                                                     <Pencil size={12} /> Editar
                                                 </button>
                                                 <button
-                                                    onClick={() => !isOngoing && handleDelete(reserva.id)}
-                                                    disabled={isOngoing}
-                                                    title={isOngoing ? "Não é possível cancelar uma reserva em curso" : "Cancelar reserva"}
+                                                    onClick={() => canCancel && handleDelete(reserva.id)}
+                                                    disabled={!canCancel}
+                                                    title={!canCancel ? "Só é possível cancelar com 15 min de antecedência" : "Cancelar reserva"}
                                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                                        isOngoing
+                                                        !canCancel
                                                             ? "bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-slate-600 cursor-not-allowed"
                                                             : "bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400"
                                                     }`}
@@ -370,7 +577,138 @@ export default function MyReservations() {
                         </div>
                     </>
                 )}
+                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
+            {/* Modal de Edição */}
+            {editModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={closeEdit}>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+                            <div>
+                                <p className="font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+                                    <Pencil size={15} className="text-blue-500" /> Editar Reserva
+                                </p>
+                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{editModal.room_name}</p>
+                            </div>
+                            <button onClick={closeEdit} className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+                            {/* Sala */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Sala</label>
+                                <div className="relative">
+                                    <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    <select
+                                        value={editForm.roomId}
+                                        onChange={e => setEditForm(f => ({ ...f, roomId: e.target.value }))}
+                                        className="cursor-pointer w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all appearance-none"
+                                        required
+                                    >
+                                        {editRooms.map(r => (
+                                            <option key={r.id} value={r.id}>{r.name} (Cap: {r.capacity})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Data */}
+                            <div>
+                                <DateSelect
+                                    label="Data"
+                                    value={editForm.date}
+                                    onChange={v => setEditForm(f => ({ ...f, date: v }))}
+                                    min={new Date().toISOString().slice(0, 10)}
+                                    required
+                                />
+                            </div>
+
+                            {/* Horas */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <TimeSelect
+                                    label="Hora Início"
+                                    value={editForm.startTime}
+                                    onChange={v => setEditForm(f => ({ ...f, startTime: v }))}
+                                    required
+                                />
+                                <TimeSelect
+                                    label="Hora Fim"
+                                    value={editForm.endTime}
+                                    onChange={v => setEditForm(f => ({ ...f, endTime: v }))}
+                                    min={editForm.startTime || undefined}
+                                    required
+                                />
+                            </div>
+
+                            {/* Motivo */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Motivo <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <AlignLeft size={15} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        value={editForm.purpose}
+                                        onChange={e => setEditForm(f => ({ ...f, purpose: e.target.value }))}
+                                        placeholder="Ex: Aula de Apoio"
+                                        required
+                                        className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Botões */}
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={closeEdit}
+                                    className="cursor-pointer flex-1 py-2.5 text-sm font-semibold text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={editLoading}
+                                    className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl transition-colors"
+                                >
+                                    <Save size={14} />
+                                    {editLoading ? "A guardar..." : "Guardar Alterações"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Check-in QR */}
+            {checkinModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={closeCheckinModal}>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="p-5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                            <div>
+                                <p className="font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+                                    <QrCode size={16} className="text-emerald-500" /> Check-in
+                                </p>
+                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{checkinModal.reserva.room_name}</p>
+                            </div>
+                            <button onClick={closeCheckinModal} className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">✕</button>
+                        </div>
+                        <div className="bg-gray-900 relative">
+                            <div id="qr-modal-reader" className="w-full" />
+                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                                <div className="w-52 h-52 border-2 border-white/60 rounded-2xl" />
+                            </div>
+                        </div>
+                        <div className="p-4 text-center">
+                            <p className="text-xs text-gray-400 dark:text-slate-500">Aponta a câmara para o QR Code da sala</p>
+                            <button onClick={closeCheckinModal} className="cursor-pointer mt-3 text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }

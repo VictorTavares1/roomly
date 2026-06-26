@@ -112,6 +112,7 @@ export const roomService = {
   create: (data) => request("api/rooms/create.php", "POST", data),
   update: (data) => request("api/rooms/update.php", "POST", data),
   delete: (id) => request("api/rooms/delete.php", "POST", { id }),
+  getQRCodes: () => request("api/rooms/get_qrcodes.php"),
 };
 
 export const reservationService = {
@@ -123,7 +124,10 @@ export const reservationService = {
   update: (data) => request("api/reservations/update.php", "POST", data),
   getByRoom: (roomId) => request(`api/reservations/list_by_room.php?room_id=${roomId}`),
   cancel: (id) => request("api/reservations/delete.php", "POST", { id }),
+  checkin: (qr_token) => request("api/reservations/confirm.php", "POST", { qr_token }),
+  confirmManual: (id) => request("api/reservations/confirm_manual.php", "POST", { id }),
 };
+
 
 export const userService = {
   getAll: () => request("api/users/list.php"),

@@ -4,7 +4,7 @@ import {
     LayoutDashboard, MapPin, Calendar, AlertTriangle,
     Wrench, Users, BookOpen, Settings,
     LogOut, Sun, Moon, Search, X, Menu, ChevronRight,
-    Building2, CalendarCheck, Download
+    Building2, CalendarCheck, Download, QrCode
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { useAuth } from "../context/AuthContext";
@@ -272,7 +272,8 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
             )}
 
             {/* Nav + Bottom — tudo num único scroll */}
-            <nav className="flex-1 overflow-y-auto px-1.5 custom-scrollbar">
+            <nav className="flex-1 overflow-y-auto px-1.5 custom-scrollbar flex flex-col">
+                <div>
                 <SectionLabel label="Principal" collapsed={collapsed} />
                 <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} collapsed={collapsed} />
                 <NavItem to="/rooms" icon={MapPin} label="Salas" onClick={onClose} collapsed={collapsed} />
@@ -290,17 +291,15 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                                 <NavItem to="/manage-rooms" icon={Building2} label="Gerir Salas" onClick={onClose} collapsed={collapsed} />
                                 <NavItem to="/manage-users" icon={Users} label="Gerir Utilizadores" onClick={onClose} collapsed={collapsed} />
                                 <NavItem to="/manage-reservations" icon={BookOpen} label="Gerir Reservas" onClick={onClose} collapsed={collapsed} />
+                                <NavItem to="/qr-codes" icon={QrCode} label="QR Codes" onClick={onClose} collapsed={collapsed} />
                             </>
                         )}
                     </>
                 )}
 
-                {/* Bottom */}
-                <div className={`py-3 mt-2 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5`}>
-
                 {/* Instalar PWA */}
                 {canInstallManual && (
-                    <div className="relative group/install">
+                    <div className="relative group/install mt-2">
                         <button
                             onClick={canInstall ? install : undefined}
                             title={canInstall ? "Instalar App" : "Clica no ícone ⊕ na barra de endereço para instalar"}
@@ -318,14 +317,12 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                                 </span>
                             )}
                         </button>
-                        {/* Tooltip desktop colapsada */}
                         {collapsed && (
                             <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-slate-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover/install:opacity-100 transition-opacity pointer-events-none z-50">
                                 {canInstall ? "Instalar App" : "Usa o ícone ⊕ na barra do browser"}
                                 <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900 dark:border-r-slate-700" />
                             </div>
                         )}
-                        {/* Tooltip instrução quando sem prompt */}
                         {!canInstall && !collapsed && (
                             <div className="mx-3 mb-1 px-2.5 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-[11px] text-blue-600 dark:text-blue-400 leading-snug">
                                 Clica no ícone <strong>⊕</strong> na barra de endereço do browser
@@ -334,6 +331,11 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                     </div>
                 )}
 
+                </div>
+            </nav>
+
+            {/* Fixo no fundo — Modo Escuro + Definições + Terminar Sessão + card do utilizador */}
+            <div className="shrink-0 px-2.5 pt-2 pb-3 border-t border-gray-100 dark:border-slate-700/60">
                 {/* Theme */}
                 <div className="relative group/theme">
                     <button
@@ -358,7 +360,7 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                 <NavItem to="/settings" icon={Settings} label="Definições" onClick={onClose} collapsed={collapsed} />
 
                 {/* Logout */}
-                <div className="relative group/logout">
+                <div className="relative group/logout mb-1">
                     <button
                         onClick={logout}
                         className={`w-full flex items-center rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all
@@ -374,13 +376,11 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                         </div>
                     )}
                 </div>
-
-                {/* User card */}
                 {!collapsed ? (
                     <Link
                         to="/settings"
                         onClick={onClose}
-                        className="flex items-center gap-3 px-3 py-3 mt-1 rounded-xl bg-gray-50 dark:bg-slate-700/40 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all border border-gray-100 dark:border-slate-700/60"
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl bg-gray-50 dark:bg-slate-700/40 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all border border-gray-100 dark:border-slate-700/60"
                     >
                         <Avatar name={user?.name} size="md" />
                         <div className="flex-1 min-w-0">
@@ -389,7 +389,7 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                         </div>
                     </Link>
                 ) : (
-                    <div className="relative group/user flex justify-center mt-1">
+                    <div className="relative group/user flex justify-center">
                         <Link to="/settings" onClick={onClose}>
                             <Avatar name={user?.name} size="md" />
                         </Link>
@@ -399,8 +399,7 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse, canInstall, canI
                         </div>
                     </div>
                 )}
-                </div>
-            </nav>
+            </div>
         </div>
     );
 }

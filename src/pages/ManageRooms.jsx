@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
     Building2, Plus, Pencil, Trash2, Search,
-    Users, Projector, X, Save, Type, Check
+    Users, Projector, X, Save, Type, Check, Filter, ChevronDown
 } from "lucide-react";
+import Pagination from "../components/Pagination";
 import toast from "react-hot-toast";
 import Layout from "../components/Layout";
 import { roomService } from "../services/api";
@@ -23,11 +24,21 @@ export default function ManageRooms() {
     const [rooms, setRooms] = useState([]);
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState("TODOS");
+    const [filterOpen, setFilterOpen] = useState(false);
+    const filterRef = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => { if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false); };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
 
     const [showForm, setShowForm] = useState(false);
     const [editingRoom, setEditingRoom] = useState(null);
     const [form, setForm] = useState(EMPTY_FORM);
     const [submitting, setSubmitting] = useState(false);
+    const [page, setPage] = useState(1);
+    const PER_PAGE = 10;
 
     const loadRooms = useCallback(() => {
         roomService.getAll().then(data => setRooms(Array.isArray(data) ? data : []));
@@ -64,7 +75,7 @@ export default function ManageRooms() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.name.trim()) { toast.error("Indica o nome da sala."); return; }
+        if (form.name.trim().length < 3) { toast.error("O nome da sala deve ter pelo menos 3 caracteres."); return; }
         if (!form.capacity || Number(form.capacity) < 1) { toast.error("Indica uma lotação válida."); return; }
 
         setSubmitting(true);
@@ -126,8 +137,11 @@ export default function ManageRooms() {
     const filtered = rooms.filter(r => {
         const matchSearch = r.name.toLowerCase().includes(search.toLowerCase());
         const matchType = typeFilter === "TODOS" || (r.type || "AULA").toUpperCase() === typeFilter;
+
         return matchSearch && matchType;
     });
+    const totalPages = Math.ceil(filtered.length / PER_PAGE);
+    const pagedRooms = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
     return (
         <Layout>
@@ -144,100 +158,105 @@ export default function ManageRooms() {
                 </div>
                 <button
                     onClick={openCreate}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors hover:brightness-110 shrink-0"
-                    style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold bg-blue-600 hover:bg-blue-700 transition-colors shrink-0"
                 >
                     <Plus size={16} /> Nova Sala
                 </button>
             </div>
 
-            {/* Formulário inline */}
+            {/* Modal */}
             {showForm && (
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden mb-5"
-                    style={{ animation: "chatSlideUp 0.2s ease both" }}>
-                    <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                {editingRoom ? <Pencil size={14} className="text-blue-600 dark:text-blue-400" /> : <Plus size={14} className="text-blue-600 dark:text-blue-400" />}
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeForm}>
+                    <div className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm" />
+                    <div
+                        className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-xl overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                                    {editingRoom ? <Pencil size={14} className="text-blue-600 dark:text-blue-400" /> : <Plus size={14} className="text-blue-600 dark:text-blue-400" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-800 dark:text-slate-100">
+                                        {editingRoom ? `Editar — ${editingRoom.name}` : "Nova Sala"}
+                                    </p>
+                                    <p className="text-xs text-gray-400 dark:text-slate-500">
+                                        {editingRoom ? "Altera os dados da sala" : "Preenche os dados da nova sala"}
+                                    </p>
+                                </div>
                             </div>
+                            <button onClick={closeForm} className="cursor-pointer w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+                            {/* Nome */}
                             <div>
-                                <p className="text-sm font-bold text-gray-800 dark:text-slate-100">
-                                    {editingRoom ? `Editar — ${editingRoom.name}` : "Nova Sala"}
-                                </p>
-                                <p className="text-xs text-gray-400 dark:text-slate-500">
-                                    {editingRoom ? "Altera os dados da sala" : "Preenche os dados da nova sala"}
-                                </p>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                    Nome da sala
+                                </label>
+                                <div className="relative">
+                                    <Type size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        value={form.name}
+                                        onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                        placeholder="Ex: Laboratório de Informática A"
+                                        required
+                                        className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 transition-all"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <button onClick={closeForm} className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                            <X size={14} />
-                        </button>
-                    </div>
 
-                    <form onSubmit={handleSubmit} className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Nome */}
-                        <div className="lg:col-span-2">
-                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                                Nome da sala
-                            </label>
-                            <div className="relative">
-                                <Type size={14} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
-                                <input
-                                    type="text"
-                                    value={form.name}
-                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                    placeholder="Ex: Laboratório de Informática A"
-                                    required
-                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                                />
+                            {/* Lotação + Tipo */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                        Lotação
+                                    </label>
+                                    <div className="relative">
+                                        <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={form.capacity}
+                                            onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
+                                            placeholder="Ex: 30"
+                                            required
+                                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 transition-all"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                        Tipo
+                                    </label>
+                                    <select
+                                        value={form.type}
+                                        onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
+                                        className="cursor-pointer w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500 transition-all"
+                                    >
+                                        {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Lotação */}
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                                Lotação
-                            </label>
-                            <div className="relative">
-                                <Users size={14} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={form.capacity}
-                                    onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
-                                    placeholder="Ex: 30"
-                                    required
-                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Tipo */}
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                                Tipo
-                            </label>
-                            <select
-                                value={form.type}
-                                onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                            >
-                                {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                        </div>
-
-                        {/* Projetor + botões */}
-                        <div className="lg:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            {/* Projetor */}
                             <button
                                 type="button"
                                 onClick={() => setForm(f => ({ ...f, has_projector: !f.has_projector }))}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium ${
+                                className={`cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-medium w-full ${
                                     form.has_projector
-                                        ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                                        : "border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
+                                        ? "border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                                        : "border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/60 text-gray-500 dark:text-slate-400"
                                 }`}
                             >
-                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
                                     form.has_projector ? "bg-blue-600 border-blue-600" : "border-gray-300 dark:border-slate-500"
                                 }`}>
                                     {form.has_projector && <Check size={11} className="text-white" />}
@@ -246,49 +265,69 @@ export default function ManageRooms() {
                                 Tem projetor
                             </button>
 
-                            <div className="flex gap-3 w-full sm:w-auto">
+                            {/* Botões */}
+                            <div className="flex gap-3 pt-1">
                                 <button type="button" onClick={closeForm}
-                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                    className="cursor-pointer flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                                     Cancelar
                                 </button>
                                 <button type="submit" disabled={submitting}
-                                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-40 hover:brightness-110"
-                                    style={{ background: "linear-gradient(135deg, #1e66ff, #4da3ff)" }}>
+                                    className="cursor-pointer flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                                     {submitting
                                         ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                                         : <Save size={14} />
                                     }
-                                    {editingRoom ? "Guardar" : "Criar Sala"}
+                                    {editingRoom ? "Guardar alterações" : "Criar Sala"}
                                 </button>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             )}
 
-            {/* Filtros */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+            {/* Pesquisa + filtro */}
+            <div className="flex gap-3 mb-5">
                 <div className="relative flex-1">
-                    <Search size={14} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                         type="text"
                         value={search}
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={e => { setSearch(e.target.value); setPage(1); }}
                         placeholder="Pesquisar por nome..."
                         className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
                     />
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                    {["TODOS", ...TYPE_OPTIONS].map(t => (
-                        <button key={t} onClick={() => setTypeFilter(t)}
-                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                                typeFilter === t
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-blue-300"
-                            }`}>
-                            {t === "TODOS" ? "Todos" : t}
-                        </button>
-                    ))}
+
+                <div ref={filterRef} className="relative shrink-0">
+                    <button
+                        onClick={() => setFilterOpen(v => !v)}
+                        className="cursor-pointer relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 transition-all duration-150"
+                    >
+                        <Filter size={14} />
+                        Filtro
+                        <ChevronDown size={13} className={`transition-transform duration-150 ${filterOpen ? "rotate-180" : ""}`} />
+                        {typeFilter !== "TODOS" && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white dark:border-slate-800" />
+                        )}
+                    </button>
+
+                    {filterOpen && (
+                        <div className="absolute right-0 mt-1.5 w-44 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg overflow-hidden z-20">
+                            {["TODOS", ...TYPE_OPTIONS].map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => { setTypeFilter(t); setPage(1); setFilterOpen(false); }}
+                                    className={`cursor-pointer w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors duration-100 ${
+                                        typeFilter === t
+                                            ? "bg-gray-50 dark:bg-slate-700/50 text-gray-800 dark:text-slate-100 font-semibold"
+                                            : "text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                                    }`}
+                                >
+                                    {t === "TODOS" ? "Todos" : t}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -315,7 +354,7 @@ export default function ManageRooms() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50 dark:divide-slate-700/60">
-                                    {filtered.map(room => {
+                                    {pagedRooms.map(room => {
                                         const t = (room.type || "AULA").toUpperCase();
                                         const tc = typeConfig[t] || typeConfig["AULA"];
                                         return (
@@ -344,14 +383,14 @@ export default function ManageRooms() {
                                                     )}
                                                 </td>
                                                 <td className="px-5 py-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button onClick={() => openEdit(room)}
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
-                                                            <Pencil size={12} /> Editar
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <button onClick={() => openEdit(room)} title="Editar"
+                                                            className="cursor-pointer p-2 rounded-lg text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
+                                                            <Pencil size={14} />
                                                         </button>
-                                                        <button onClick={() => handleDelete(room)}
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                                            <Trash2 size={12} /> Remover
+                                                        <button onClick={() => handleDelete(room)} title="Remover"
+                                                            className="cursor-pointer p-2 rounded-lg text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                            <Trash2 size={14} />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -380,13 +419,13 @@ export default function ManageRooms() {
                                             )}
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => openEdit(room)}
-                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
-                                                <Pencil size={12} /> Editar
+                                            <button onClick={() => openEdit(room)} title="Editar"
+                                                className="cursor-pointer flex-1 flex items-center justify-center p-2 rounded-lg text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
+                                                <Pencil size={14} />
                                             </button>
-                                            <button onClick={() => handleDelete(room)}
-                                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                                <Trash2 size={12} /> Remover
+                                            <button onClick={() => handleDelete(room)} title="Remover"
+                                                className="cursor-pointer flex-1 flex items-center justify-center p-2 rounded-lg text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                <Trash2 size={14} />
                                             </button>
                                         </div>
                                     </div>
@@ -395,6 +434,7 @@ export default function ManageRooms() {
                         </div>
                     </>
                 )}
+                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
         </Layout>
     );

@@ -16,11 +16,14 @@ import RoomDetail from './pages/RoomDetail';
 import ManageRooms from './pages/ManageRooms';
 import ManageUsers from './pages/ManageUsers';
 import ManageReservations from './pages/ManageReservations';
-import EditReservation from './pages/EditReservation';
 
 // Páginas de manutenção
 import ReportIssue from './pages/ReportIssue';
 import ManageReports from './pages/ManageReports';
+
+// QR Code
+import QRCheckin from './pages/QRCheckin';
+import QRCodes from './pages/QRCodes';
 
 // Proteção de rotas
 import AdminRoute from './components/AdminRoute';
@@ -51,7 +54,7 @@ export default function App() {
       <Route path="/my-reservations" element={<PrivateRoute><MyReservations /></PrivateRoute>} />
       <Route path="/room-detail" element={<PrivateRoute><RoomDetail /></PrivateRoute>} />
       <Route path="/new-reservation" element={<PrivateRoute><NewReservation /></PrivateRoute>} />
-      <Route path="/edit-reservation" element={<PrivateRoute><EditReservation /></PrivateRoute>} />
+      <Route path="/edit-reservation" element={<Navigate to="/my-reservations" replace />} />
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
       {/* Suporte técnico — my-reports redireciona para a página unificada */}
@@ -60,6 +63,10 @@ export default function App() {
 
       {/* Manutenção (admin + funcionário) */}
       <Route path="/manage-reports" element={<StaffRoute><ManageReports /></StaffRoute>} />
+
+      {/* QR Code */}
+      <Route path="/qr-checkin" element={<PrivateRoute><QRCheckin /></PrivateRoute>} />
+      <Route path="/qr-codes" element={<AdminRoute><QRCodes /></AdminRoute>} />
 
       {/* Rotas de Admin (só admin) */}
       <Route path="/manage-rooms" element={<AdminRoute><ManageRooms /></AdminRoute>} />

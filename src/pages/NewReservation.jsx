@@ -125,8 +125,22 @@ export default function NewReservation() {
             return;
         }
 
+        if (purpose.trim().length > 200) {
+            toast.error("O motivo não pode ter mais de 200 caracteres.");
+            setLoading(false);
+            return;
+        }
+
         if (startTime >= endTime) {
             toast.error("A hora de fim tem de ser depois do início.");
+            setLoading(false);
+            return;
+        }
+
+        const [sh, sm] = startTime.split(":").map(Number);
+        const [eh, em] = endTime.split(":").map(Number);
+        if ((eh * 60 + em) - (sh * 60 + sm) < 15) {
+            toast.error("A reserva deve ter pelo menos 15 minutos de duração.");
             setLoading(false);
             return;
         }

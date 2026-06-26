@@ -4,7 +4,7 @@ import {
     Calendar, ShieldAlert, Clock, Activity,
     History, Users, DoorOpen, CheckCircle2, XCircle,
     AlertTriangle, UserPlus, Edit3, ChevronRight, BarChart2,
-    PlusSquare, Trash2, UserCog, ShieldCheck, FileEdit
+    PlusSquare, Trash2, UserCog, ShieldCheck, FileEdit, QrCode
 } from "lucide-react";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -37,6 +37,8 @@ function timeAgo(dateString) {
 /* ─── activity icon mapping ─── */
 const activityIcon = (type) => {
     switch (type) {
+        case "reserva_pendente":
+            return { Icon: QrCode, bg: "bg-amber-100 dark:bg-amber-900/40", color: "text-amber-500 dark:text-amber-400" };
         case "reserva":
             return { Icon: CheckCircle2, bg: "bg-emerald-100 dark:bg-emerald-900/40", color: "text-emerald-600 dark:text-emerald-400" };
         case "cancelamento":
@@ -110,6 +112,9 @@ const ActivityItem = ({ act, isLast }) => {
                 <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 leading-snug">
                     {act.action_label || act.action}
                 </p>
+                {act.user && (
+                    <p className="text-xs font-medium text-blue-500 dark:text-blue-400 mt-0.5">{act.user}</p>
+                )}
                 <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 truncate">
                     {act.target}
                 </p>
@@ -160,7 +165,7 @@ export default function Dashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
-                            Olá, {user?.name?.split(" ")[0] || "Visitante"}!
+                            O seu resumo
                         </h1>
                         <p className="text-sm text-gray-400 dark:text-slate-500 mt-0.5">
                             {new Date().toLocaleDateString("pt-PT", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
@@ -177,11 +182,12 @@ export default function Dashboard() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7 stagger-children">
+            <div className={`grid grid-cols-2 gap-4 mb-7 stagger-children ${user?.role === 'admin' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
                 <StatCard
                     icon={DoorOpen}
                     label="Salas Disponíveis"
                     value={stats.rooms}
+                    sub="para reservar"
                     iconBg="bg-blue-500"
                 />
                 <StatCard
@@ -189,7 +195,7 @@ export default function Dashboard() {
                     label="Reservas Hoje"
                     value={stats.reservations_today}
                     iconBg="bg-emerald-500"
-                    sub="agendadas para hoje"
+                    sub={user?.role === 'admin' || user?.role === 'funcionario' ? "confirmadas hoje" : "confirmadas hoje"}
                     subColor="text-emerald-500 dark:text-emerald-400"
                 />
                 <StatCard
@@ -197,16 +203,18 @@ export default function Dashboard() {
                     label="Problemas Reportados"
                     value={stats.reported_problems}
                     iconBg="bg-orange-500"
-                    sub="pendentes de resolução"
+                    sub={user?.role === 'admin' || user?.role === 'funcionario' ? "pendentes de resolução" : "os meus reportes pendentes"}
                     subColor="text-orange-500 dark:text-orange-400"
                 />
-                <StatCard
-                    icon={Users}
-                    label="Utilizadores"
-                    value={stats.users}
-                    iconBg="bg-rose-500"
-                    sub="contas registadas"
-                />
+                {user?.role === 'admin' && (
+                    <StatCard
+                        icon={Users}
+                        label="Utilizadores"
+                        value={stats.users}
+                        iconBg="bg-rose-500"
+                        sub="contas registadas"
+                    />
+                )}
             </div>
 
             {/* Main Grid */}
