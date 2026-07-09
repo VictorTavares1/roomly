@@ -746,7 +746,7 @@ export default function Landing() {
             <span className="font-black text-gray-700 text-sm" style={{ letterSpacing: "-0.3px" }}>roomly</span>
           </div>
           <p className="text-xs text-gray-400 text-center">
-            © 2026 Roomly — Plataforma de Gestão de Espaços Institucionais.
+            Desenvolvido por Victor Tavares (Prova de aptidão profissional)
           </p>
           <button onClick={() => go("/login")}
             className="text-xs font-semibold text-blue-500 hover:text-blue-700 transition-colors">

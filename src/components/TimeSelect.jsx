@@ -15,7 +15,7 @@ function isValidTime(val) {
     })();
 }
 
-export default function TimeSelect({ value, onChange, label, required, min, className = "" }) {
+export default function TimeSelect({ value, onChange, label, required, min, className = "", inputRef }) {
     const [input, setInput] = useState(value || "");
     const [open, setOpen] = useState(false);
     const containerRef = useRef(null);
@@ -86,6 +86,7 @@ export default function TimeSelect({ value, onChange, label, required, min, clas
                     <Clock className="h-4 w-4 text-gray-400 dark:text-slate-500" />
                 </div>
                 <input
+                    ref={inputRef}
                     type="text"
                     value={input}
                     onChange={handleInputChange}

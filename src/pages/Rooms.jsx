@@ -113,7 +113,7 @@ export default function Rooms() {
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
     const todayStr = new Date().toISOString().slice(0, 10);
-    const nowTimeStr = new Date().toTimeString().slice(0, 5);
+    const getNowTimeStr = () => new Date().toTimeString().slice(0, 5);
 
     const fetchRooms = useCallback(() => {
         roomService
@@ -144,6 +144,13 @@ export default function Rooms() {
         setSearchTerm(searchInput);
     }, [searchInput]);
 
+    const startInputRef = useRef(null);
+    const endInputRef = useRef(null);
+    // Refs espelham o estado imediatamente — evitam problema de setState async no momento do click
+    const dateInputRef = useRef(dateInput);
+    const startTimeRef = useRef(startTimeInput);
+    const endTimeRef = useRef(endTimeInput);
+
     const applyFilters = async (overrides = {}) => {
         const t = overrides.type !== undefined ? overrides.type : typeInput;
         const c = overrides.capacity !== undefined ? overrides.capacity : capacityInput;
@@ -152,21 +159,28 @@ export default function Rooms() {
         setCapacityFilter(c);
         setStateFilter(s);
 
-        if (dateInput && startTimeInput && endTimeInput) {
-            if (startTimeInput >= endTimeInput) {
+        // Ler dos refs (sempre actuais) e também do valor DOM como fallback
+        const domStart = startInputRef.current?.value || "";
+        const domEnd = endInputRef.current?.value || "";
+        const date = dateInputRef.current;
+        const start = domStart || startTimeRef.current;
+        const end = domEnd || endTimeRef.current;
+
+        if (date && start && end) {
+            if (start >= end) {
                 toast.error("A hora de fim tem de ser depois da hora de início.");
                 return;
             }
             setAvailabilityLoading(true);
             try {
-                const data = await roomService.getAvailable(dateInput, startTimeInput, endTimeInput);
+                const data = await roomService.getAvailable(date, start, end);
                 const list = Array.isArray(data) ? data : [];
                 const ids = new Set(list.map((r) => String(r.id)));
                 const map = {};
                 list.forEach((r) => { map[String(r.id)] = r; });
                 setAvailableIds(ids);
                 setAvailableRoomsMap(map);
-            } catch {
+            } catch (err) {
                 toast.error("Erro ao verificar disponibilidade.");
                 setAvailableIds(null);
                 setAvailableRoomsMap({});
@@ -235,6 +249,9 @@ export default function Rooms() {
         setTypeInput("");
         setCapacityInput("");
         setStateInput("");
+        dateInputRef.current = "";
+        startTimeRef.current = "";
+        endTimeRef.current = "";
         setDateInput("");
         setStartTimeInput("");
         setEndTimeInput("");
@@ -437,19 +454,24 @@ export default function Rooms() {
                     <span className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1 shrink-0">
                         <Calendar size={11} /> Disponível em
                     </span>
-                    <DateSelect value={dateInput} min={todayStr} onChange={(val) => { setDateInput(val); setStartTimeInput(""); setEndTimeInput(""); }} />
-                    <TimeSelect value={startTimeInput} onChange={setStartTimeInput} min={dateInput === todayStr ? nowTimeStr : undefined} />
+                    <DateSelect value={dateInput} min={todayStr} onChange={(val) => { dateInputRef.current = val; setDateInput(val); startTimeRef.current = ""; endTimeRef.current = ""; setStartTimeInput(""); setEndTimeInput(""); }} />
+                    <TimeSelect value={startTimeInput} onChange={(val) => { startTimeRef.current = val; setStartTimeInput(val); if (endTimeInput && val >= endTimeInput) { endTimeRef.current = ""; setEndTimeInput(""); } }} min={dateInput === todayStr ? getNowTimeStr() : undefined} inputRef={startInputRef} />
                     <span className="text-gray-300 dark:text-slate-600 text-xs">–</span>
-                    <TimeSelect value={endTimeInput} onChange={setEndTimeInput} min={startTimeInput || undefined} />
+                    <TimeSelect value={endTimeInput} onChange={(val) => { endTimeRef.current = val; setEndTimeInput(val); }} min={startTimeInput || undefined} inputRef={endInputRef} />
 
                     {availableIds !== null && (
                         <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
                             <CheckCircle2 size={11} />
-                            {filteredRooms.length} disponíve{filteredRooms.length !== 1 ? "is" : "l"}
+                            {availableIds.size} disponíve{availableIds.size !== 1 ? "is" : "l"}
                         </span>
                     )}
 
-                    <button onClick={applyFilters} disabled={availabilityLoading}
+                    <button onClick={() => {
+                        setTypeFilter(""); setTypeInput("");
+                        setCapacityFilter(""); setCapacityInput("");
+                        setStateFilter(""); setStateInput("");
+                        applyFilters({ type: "", capacity: "", state: "" });
+                    }} disabled={availabilityLoading}
                         className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition-colors">
                         {availabilityLoading
                             ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" /> A verificar...</>
