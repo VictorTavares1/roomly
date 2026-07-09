@@ -191,10 +191,7 @@ export default function ReportIssue() {
     const loadReports = useCallback(async () => {
         try {
             const data = await reportService.getAll();
-            const mine = Array.isArray(data)
-                ? data.filter(r => r.user_id === user?.id || r.user_name === user?.name)
-                : [];
-            setReports(mine);
+            setReports(Array.isArray(data) ? data : []);
         } catch { /* silencioso */ }
         finally { setLoadingReports(false); }
     }, [user]);

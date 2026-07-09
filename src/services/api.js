@@ -92,9 +92,12 @@ export const roomService = {
 };
 
 export const reservationService = {
-  getAll: () => request("api/reservations/all"),
+  getAll: (page = 1) => request(`api/reservations/all?page=${page}`).then(r => r.data ?? r),
   getByDate: (date) => request(`api/reservations/by-date?date=${date}`),
-  getCalendarEvents: () => request("api/reservations/calendar"),
+  getCalendarEvents: (start, end) => {
+    const params = start && end ? `?start=${start}&end=${end}` : "";
+    return request(`api/reservations/calendar${params}`);
+  },
   getMyReservations: () => request("api/reservations/my"),
   create: (data) => request("api/reservations", "POST", data),
   update: (data) => request("api/reservations", "PUT", data),

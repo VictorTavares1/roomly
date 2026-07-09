@@ -21,11 +21,16 @@ const localizer = dateFnsLocalizer({
 
 export default function Scheduler({ roomId, date }) {
     const [events, setEvents] = useState([]);
+    const [currentDate, setCurrentDate] = useState(date ? new Date(date) : new Date());
 
     useEffect(() => {
         async function fetchEvents() {
             try {
-                const data = await reservationService.getCalendarEvents();
+                // Envia a janela do mês visível ao backend — evita carregar toda a tabela
+                const d = currentDate;
+                const start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+                const end = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString().slice(0, 10);
+                const data = await reservationService.getCalendarEvents(start, end);
 
                 const formattedEvents = data.map((event) => ({
                     title: `${event.room_name} (${event.user_name})`,
@@ -41,7 +46,7 @@ export default function Scheduler({ roomId, date }) {
             }
         }
         fetchEvents();
-    }, []);
+    }, [currentDate]);
 
     // Filtra por sala e/ou data quando fornecidos
     const filteredEvents = events.filter((ev) => {
@@ -51,8 +56,6 @@ export default function Scheduler({ roomId, date }) {
         const evDate = ev.start.toISOString().slice(0, 10);
         return evDate === date;
     });
-
-    const defaultDate = date ? new Date(date) : new Date();
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-[600px]">
@@ -64,7 +67,8 @@ export default function Scheduler({ roomId, date }) {
             <Calendar
                 localizer={localizer}
                 events={filteredEvents}
-                date={defaultDate}
+                date={currentDate}
+                onNavigate={(newDate) => setCurrentDate(newDate)}
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: "100%" }}
