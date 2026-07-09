@@ -3,14 +3,14 @@ import { X, Send, Bot, MessageSquare, CalendarCheck, Clock, AlignLeft, QrCode, A
 import { reservationService } from "../services/api";
 import toast from "react-hot-toast";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1/Roomly/roomly_api";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
 function getToken() {
     return localStorage.getItem("roomly_token");
 }
 
 async function sendMessage(message, history) {
-    const res = await fetch(`${API_BASE}/api/assistant/chat.php`, {
+    const res = await fetch(`${API_BASE}/api/assistant/chat`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { CheckCircle, CheckCircle2, Clock, MapPin, User, Wrench, ImageIcon, X, Search, Loader2, CircleDot, Filter, ChevronDown } from "lucide-react";
 import Pagination from "../components/Pagination";
 import toast from "react-hot-toast";
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1/Roomly/roomly_api";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 import Layout from "../components/Layout";
 import { reportService } from "../services/api";
 
